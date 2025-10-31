@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
   <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=1.1.1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -25,12 +25,14 @@
   </header>
 
   <main class="container">
+    <!-- HOME -->
     <section id="view-home" class="screen active">
       <h3>היום</h3>
       <div class="home-cards" id="homeCards"></div>
       <div class="hint">בחר ספק כדי לפתוח הזמנה</div>
     </section>
 
+    <!-- ORDERS -->
     <section id="view-orders" class="screen">
       <div class="toolbar">
         <div class="supplier-switch">
@@ -56,11 +58,13 @@
       </div>
     </section>
 
+    <!-- HISTORY -->
     <section id="view-history" class="screen">
       <h3>היסטוריה</h3>
       <div id="historyList" class="list"></div>
     </section>
 
+    <!-- ANALYTICS -->
     <section id="view-analytics" class="screen">
       <h3>נתונים</h3>
       <div class="filters-row">
@@ -72,6 +76,7 @@
       <div id="analyticsBox" class="list"></div>
     </section>
 
+    <!-- SETTINGS -->
     <section id="view-settings" class="screen">
       <h3>הגדרות</h3>
       <div class="item">
@@ -128,13 +133,13 @@
         <div class="label">נתונים</div>
       </button>
       <button class="tab" data-target="view-settings" title="הגדרות">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7 3.22l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 1 1 20.78 7l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .66.39 1.26 1 1.51.32.14.67.2 1.02.2H21a2 2 0 1 1 0 4h-.09a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
         <div class="label">הגדרות</div>
       </button>
     </div>
   </nav>
 
   <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
-  <script src="script.js"></script>
+  <script src="script.js?v=1.1.1"></script>
 </body>
 </html>

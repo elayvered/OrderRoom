@@ -1,12 +1,20 @@
 (function(){
   const K = {
-    orders: "or_v11_orders",
-    draft: "or_v11_draft",
-    suppliers: "or_v11_suppliers",
-    activeSupplier: "or_v11_active_supplier",
-    items: "or_v11_items",
-    notes: "or_v11_notes"
+    orders: "or_v111_orders",
+    draft: "or_v111_draft",
+    suppliers: "or_v111_suppliers",
+    activeSupplier: "or_v111_active_supplier",
+    items: "or_v111_items",
+    notes: "or_v111_notes"
   };
+
+  // Allow reset via ?reset=1
+  try {
+    const p = new URLSearchParams(location.search);
+    if (p.get("reset") === "1") {
+      Object.values(K).forEach(k => localStorage.removeItem(k));
+    }
+  } catch(e){}
 
   const DEFAULT_SUPPLIERS = [
     { name: "מזרח מערב", phone: "9725044320036", day: "all" },
@@ -23,16 +31,42 @@
     "רשת לסיר אורז","כף ווק","ווק","דפי רשת אורז","אצות וואקמה","אצות קומבו","דאשי","אררה","צ'ופסטיקס חבק שחור","שיפודי יקיטורי"
   ];
 
+  function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+  function load(k,def){ try{return JSON.parse(localStorage.getItem(k)) ?? def}catch{return def} }
+
+  // Load state
+  let suppliers = load(K.suppliers, []);
+  if (!Array.isArray(suppliers) || suppliers.length === 0) {
+    suppliers = DEFAULT_SUPPLIERS.map(s => ({...s}));
+    save(K.suppliers, suppliers);
+  } else {
+    // normalize days
+    suppliers = suppliers.map(s => ({...s, day: (s.day ?? "all")}));
+    save(K.suppliers, suppliers);
+  }
+
+  let items = load(K.items, {});
+  if (!items || typeof items !== "object") items = {};
+  // ensure items for East West
+  const mmPhone = suppliers.find(s => s.name === "מזרח מערב")?.phone || "9725044320036";
+  if (!Array.isArray(items[mmPhone]) || items[mmPhone].length === 0) {
+    items[mmPhone] = MM_ITEMS.map(n => ({ name:n, unit:"", price:0 }));
+  }
+  // ensure items object keys exist for all suppliers
+  suppliers.forEach(s => { if (!Array.isArray(items[s.phone])) items[s.phone]=[]; });
+  save(K.items, items);
+
   let orders = load(K.orders, []);
   let draft = load(K.draft, {});
-  let suppliers = load(K.suppliers, DEFAULT_SUPPLIERS);
-  let activeSupplier = load(K.activeSupplier, suppliers[0]?.phone || "");
-  let items = load(K.items, {
-    [suppliers[0]?.phone || "9725044320036"]: MM_ITEMS.map(n => ({ name:n, unit:"", price:0 })),
-    [suppliers[1]?.phone || "972500000000"]: []
-  });
   let notes = load(K.notes, "");
 
+  let activeSupplier = load(K.activeSupplier, suppliers[0]?.phone || mmPhone);
+  if (!suppliers.some(s => s.phone === activeSupplier)) {
+    activeSupplier = suppliers[0]?.phone || mmPhone;
+    save(K.activeSupplier, activeSupplier);
+  }
+
+  // Refs
   const headerDate = document.getElementById("headerDate");
   const homeCards = document.getElementById("homeCards");
   const ordersGrid = document.getElementById("ordersGrid");
@@ -45,23 +79,24 @@
   const toDate = document.getElementById("toDate");
   const analyticsBox = document.getElementById("analyticsBox");
 
-  function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
-  function load(k,def){ try{return JSON.parse(localStorage.getItem(k)) ?? def}catch{return def} }
-
   function show(tabId){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-    document.getElementById(tabId).classList.add("active");
+    const el = document.getElementById(tabId);
+    if (el) el.classList.add("active");
     document.querySelectorAll(".nav .tab").forEach(t=>t.classList.remove("active"));
-    document.querySelector(`.nav .tab[data-target='${tabId}']`).classList.add("active");
+    const btn = document.querySelector(`.nav .tab[data-target='${tabId}']`);
+    if (btn) btn.classList.add("active");
   }
 
   // Nav
   document.querySelectorAll(".nav .tab").forEach(btn=>btn.addEventListener("click",()=>{
-    show(btn.getAttribute("data-target"));
-    if(btn.getAttribute("data-target")==="view-orders") buildOrders();
-    if(btn.getAttribute("data-target")==="view-history") renderHistory();
-    if(btn.getAttribute("data-target")==="view-analytics") renderAnalyticsThisMonth();
-    if(btn.getAttribute("data-target")==="view-settings") renderSettings();
+    const target = btn.getAttribute("data-target");
+    show(target);
+    if(target==="view-home") renderHome();
+    if(target==="view-orders") buildOrders();
+    if(target==="view-history") renderHistory();
+    if(target==="view-analytics") renderAnalyticsThisMonth();
+    if(target==="view-settings") renderSettings();
   }));
 
   // Header date
@@ -71,7 +106,7 @@
     const months = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
     return `יום ${days[now.getDay()]} · ${now.getDate()} ב${months[now.getMonth()]} ${now.getFullYear()}`;
   }
-  headerDate.textContent = hebDate();
+  if (headerDate) headerDate.textContent = hebDate();
 
   // HOME
   function suppliersForToday(){
@@ -79,6 +114,7 @@
     return suppliers.filter(s => s.day==="all" || s.day===d);
   }
   function renderHome(){
+    if (!homeCards) return;
     const list = suppliersForToday();
     homeCards.innerHTML = "";
     if(!list.length){ homeCards.innerHTML = `<div class="item">אין הזמנות מתוכננות להיום</div>`; return; }
@@ -98,6 +134,7 @@
 
   // ORDERS
   function renderSupplierSwitch(){
+    if (!activeSupplierSwitch) return;
     activeSupplierSwitch.innerHTML = "";
     suppliers.forEach(s=>{
       const o = document.createElement("option");
@@ -106,11 +143,11 @@
       if(s.phone===activeSupplier) o.selected = true;
       activeSupplierSwitch.appendChild(o);
     });
-    activeSupplierSwitch.addEventListener("change", ()=>{
+    activeSupplierSwitch.onchange = ()=>{
       activeSupplier = activeSupplierSwitch.value;
       save(K.activeSupplier, activeSupplier);
       buildOrders();
-    });
+    };
   }
   function lastOrderMap(phone){
     const o = orders.find(x=>x.supplier===phone);
@@ -118,6 +155,7 @@
   }
   function buildOrders(){
     renderSupplierSwitch();
+    if (!ordersGrid) return;
     const list = items[activeSupplier] || [];
     const prev = lastOrderMap(activeSupplier);
     ordersGrid.innerHTML = "";
@@ -139,7 +177,7 @@
       });
       ordersGrid.appendChild(row);
     });
-    orderNotes.value = notes || "";
+    if (orderNotes) { orderNotes.value = notes || ""; }
     updatePreview();
   }
   function focusNextQuantity(el){
@@ -166,33 +204,40 @@
     return `${header}\n${body}${foot}${end}`;
   }
   function updatePreview(){
+    if (!summaryCount || !preview) return;
     const map=collectMap();
     const count=Object.keys(map).length;
     summaryCount.textContent=`סה״כ פריטים: ${count}`;
     preview.textContent = count ? buildWhatsAppText(map) : (notes ? `הערות:\n${notes}` : "");
   }
-  document.getElementById("btnSave").addEventListener("click", ()=>{
+
+  const btnSave = document.getElementById("btnSave");
+  const btnCopy = document.getElementById("btnCopy");
+  const btnWhatsApp = document.getElementById("btnWhatsApp");
+
+  if (btnSave) btnSave.addEventListener("click", ()=>{
     const map=collectMap();
     orders.unshift({ ts: Date.now(), supplier: activeSupplier, map, notes });
     save(K.orders, orders);
     draft={}; save(K.draft,draft); buildOrders();
     toast("ההזמנה נשמרה");
   });
-  document.getElementById("btnCopy").addEventListener("click", ()=>{
+  if (btnCopy) btnCopy.addEventListener("click", ()=>{
     const txt=buildWhatsAppText(collectMap());
     navigator.clipboard&&navigator.clipboard.writeText(txt);
     toast("הטקסט הועתק");
   });
-  document.getElementById("btnWhatsApp").addEventListener("click", ()=>{
+  if (btnWhatsApp) btnWhatsApp.addEventListener("click", ()=>{
     const s=suppliers.find(x=>x.phone===activeSupplier);
     if(!s){ toast("בחר ספק"); return; }
     const url="https://wa.me/"+s.phone+"?text="+encodeURIComponent(buildWhatsAppText(collectMap()));
     window.open(url,"_blank");
   });
-  orderNotes.addEventListener("input", ()=>{ notes=orderNotes.value; save(K.notes, notes); updatePreview(); });
+  if (orderNotes) orderNotes.addEventListener("input", ()=>{ notes=orderNotes.value; save(K.notes, notes); updatePreview(); });
 
   // HISTORY
   function renderHistory(){
+    if (!historyList) return;
     historyList.innerHTML="";
     if(!orders.length){ historyList.innerHTML='<div class="item">אין היסטוריה עדיין</div>'; return; }
     orders.forEach((o,i)=>{
@@ -206,9 +251,10 @@
     });
   }
 
-  // ANALYTICS (simple)
+  // ANALYTICS
   let chart;
   function renderAnalyticsRange(startMs,endMs){
+    if (!document.getElementById("chartBar")) return;
     const dataMap = new Map();
     orders.filter(o=>o.ts>=startMs && o.ts<=endMs).forEach(o=>{
       Object.entries(o.map).forEach(([name,qty])=>{
@@ -229,12 +275,6 @@
     const now=new Date(); const start=new Date(now.getFullYear(), now.getMonth(), 1).getTime(); const end=new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999).getTime();
     renderAnalyticsRange(start,end);
   }
-  document.getElementById("btnThisMonth").addEventListener("click", renderAnalyticsThisMonth);
-  document.getElementById("btnRange").addEventListener("click", ()=>{
-    const s=fromDate.value? new Date(fromDate.value).getTime():0;
-    const e=toDate.value? new Date(toDate.value).getTime()+86400000-1:Date.now();
-    renderAnalyticsRange(s,e);
-  });
 
   // SETTINGS
   const suppliersList = document.getElementById("suppliersList");
@@ -250,6 +290,7 @@
   const itemsTable = document.getElementById("itemsTable");
 
   function renderSettings(){
+    if (!suppliersList) return;
     suppliersList.innerHTML="";
     suppliers.forEach((s,idx)=>{
       const row=document.createElement("div"); row.className="item";
@@ -259,6 +300,7 @@
       suppliersList.appendChild(row);
     });
 
+    if (!itmSupplier) return;
     itmSupplier.innerHTML="";
     suppliers.forEach(s=>{
       const o=document.createElement("option");
@@ -270,8 +312,8 @@
     itmSupplier.addEventListener("change", ()=>renderItemsTable(itmSupplier.value));
   }
 
-  btnAddSupplier.addEventListener("click", ()=>{
-    const name=supName.value.trim(); const phone=supPhone.value.trim(); const day=supDay.value;
+  if (btnAddSupplier) btnAddSupplier.addEventListener("click", ()=>{
+    const name=supName.value.trim(); const phone=supPhone.value.trim(); const day=supDay.value||"all";
     if(!name || !phone){ toast("שם ומספר ספק חובה"); return; }
     const i=suppliers.findIndex(x=>x.phone===phone);
     const rec={ name, phone, day };
@@ -283,6 +325,7 @@
   });
 
   function renderItemsTable(phone){
+    if (!itemsTable) return;
     itemsTable.innerHTML="";
     const list=items[phone]||[];
     if(!list.length){ itemsTable.innerHTML='<div class="item">אין פריטים לספק זה</div>'; return; }
@@ -298,48 +341,17 @@
     t.appendChild(tb); host.appendChild(t); itemsTable.appendChild(host);
   }
 
-  btnAddItem.addEventListener("click", ()=>{
-    const name=itmName.value.trim(); if(!name){ toast("שם פריט חובה"); return; }
-    const unit=itmUnit.value.trim(); const price=parseFloat(itmPrice.value)||0; const phone=itmSupplier.value;
-    const list = items[phone] || [];
-    const ix = list.findIndex(i=>i.name===name);
-    const rec = { name, unit, price };
-    if(ix>=0) list[ix]=rec; else list.push(rec);
-    items[phone]=list; save(K.items, items);
-    renderItemsTable(phone);
-    toast(ix>=0? "פריט עודכן":"פריט נוסף");
-  });
-
   function toast(msg){
     const t=document.getElementById("toast"), m=document.getElementById("toastMsg");
+    if (!t || !m) return;
     m.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1500);
   }
 
-  function renderAnalyticsThisMonth(){
-    const now=new Date(); const start=new Date(now.getFullYear(), now.getMonth(), 1).getTime(); const end=new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999).getTime();
-    renderAnalyticsRange(start,end);
+  // INIT
+  function init(){
+    renderHome();
+    buildOrders();
   }
-
-  let chart;
-  function renderAnalyticsRange(startMs,endMs){
-    const dataMap = new Map();
-    orders.filter(o=>o.ts>=startMs && o.ts<=endMs).forEach(o=>{
-      Object.entries(o.map).forEach(([name,qty])=>{
-        const n=parseFloat(String(qty).match(/\d+(?:\.\d+)?/));
-        if(!isNaN(n)) dataMap.set(name,(dataMap.get(name)||0)+n);
-      });
-    });
-    const rows=[...dataMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const ctx=document.getElementById("chartBar").getContext("2d");
-    if(chart) chart.destroy();
-    chart=new Chart(ctx,{type:"bar",data:{labels:rows.map(r=>r[0]),datasets:[{label:"כמות",data:rows.map(r=>r[1])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
-    analyticsBox.innerHTML = "";
-    const host=document.createElement("div"); host.className="item";
-    host.innerHTML = rows.length ? rows.map(r=>`${r[0]} — ${r[1]}`).join("<br>") : "אין נתונים בתאריכים שנבחרו";
-    analyticsBox.appendChild(host);
-  }
-
-  renderHome();
-  buildOrders();
+  init();
 
 })();
