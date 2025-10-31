@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-circle" aria-label="Order Room">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" opacity=".96">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3.2a6.8 6.8 0 1 1 0 13.6 6.8 6.8 0 0 1 0-13.6Zm-2.9 4.1c1.1-.6 2.4-.9 3.8-.9 1.4 0 2.7.3 3.8.9.4.2.5.7.3 1.1-.2.4-.7.5-1.1.3-.9-.5-2-.7-3-.7s-2.1.2-3 .7c-.4.2-.9.1-1.1-.3-.2-.4-.1-.9.3-1.1Zm7.6 5.4c.4.2.5.7.3 1.1-.9 1.5-2.6 2.4-5 2.4s-4.1-.9-5-2.4c-.2-.4-.1-.9.3-1.1.4-.2.9-.1 1.1.3.6 1 1.9 1.6 3.6 1.6s3-.6 3.6-1.6c.2-.4.7-.5 1.1-.3Z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="title">Order Room</div>
+        <div class="sub">מערכת ניהול הזמנות והספקים החכמה של סושירום</div>
+      </div>
+      <div class="supplier-switch">
+        <label>ספק:</label>
+        <select id="activeSupplierSwitch"></select>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="toolbar only-orders">
+      <button class="btn primary" id="btnSave">שמור הזמנה</button>
+      <button class="btn" id="btnWhatsApp">שלח בוואטסאפ</button>
+      <button class="btn" id="btnCopy">העתק נוסח</button>
+      <div class="muted" id="activeSupplierBadge"></div>
+    </div>
+
+    <section id="view-orders" class="screen active" aria-label="הזמנות">
+      <div class="hint">שדות כמות ריקים לא יופיעו בהודעה. "קודם" מציג את הכמות מההזמנה האחרונה לפריט. ניתן לערוך פריט דרך אייקון ✎.</div>
+      <div id="ordersGrid" class="grid" role="list"></div>
+      <div class="panel notes">
+        <label for="orderNotes" class="hint">הערות חופשיות להזמנה (יופיעו בסוף ההודעה):</label>
+        <textarea id="orderNotes" placeholder="למשל: לא לפרוס סלמון, להוסיף מכסה נוסף ל׳מגש 07׳..."></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h4>תצוגת נוסח</h4>
+          <div id="summaryCount" class="muted">סה״כ פריטים: 0</div>
+        </div>
+        <pre id="preview" class="whats"></pre>
+      </div>
+    </section>
+
+    <section id="view-history" class="screen" aria-label="היסטוריה">
+      <h3>היסטוריית הזמנות ופעולות</h3>
+      <div id="historyList" class="list"></div>
+    </section>
+
+    <section id="view-analytics" class="screen" aria-label="נתונים">
+      <h3>נתוני הזמנות</h3>
+      <div class="filters-row">
+        <label>חודש: <select id="monthSelect"></select></label>
+        <label>טווח:
+          <input type="date" id="fromDate" />–<input type="date" id="toDate" />
+        </label>
+        <label>ספק: <select id="filterSupplier"></select></label>
+        <label>פריטים: <select id="filterItems" multiple size="4"></select></label>
+        <button class="btn" id="btnRange">הצג</button>
+        <button class="btn" id="btnThisMonth">חודש נוכחי</button>
+        <button class="btn" id="btnClearFilters">נקה סינון</button>
+      </div>
+      <div class="panel">
+        <canvas id="chartBar" style="height:300px"></canvas>
+      </div>
+      <div id="analyticsBox" class="list"></div>
+    </section>
+
+    <section id="view-settings" class="screen" aria-label="הגדרות">
+      <h3>הגדרות</h3>
+
+      <div class="item">
+        <h4>ניהול ספקים</h4>
+        <div class="hint">בחר ספק פעיל, הוסף/עדכן/מחק, ושייך פריטים לספקים.</div>
+        <div class="supplier-row">
+          <select id="supplierSelect"></select>
+          <button class="btn" id="btnSetActive">קבע כספק פעיל</button>
+        </div>
+        <div class="supplier-form">
+          <input id="supName" class="text" placeholder="שם ספק (לדוג׳: מזרח מערב)" />
+          <input id="supPhone" class="text" placeholder="מס׳ וואטסאפ בינ״ל (ללא +) – לדוג׳: 97250..." />
+          <button class="btn" id="btnAddSupplier">הוסף/עדכן</button>
+          <button class="btn danger" id="btnDeleteSupplier">מחק</button>
+        </div>
+      </div>
+
+      <div class="item">
+        <h4>ניהול פריטים</h4>
+        <div class="hint">שם, יח׳ מידה, מחיר, וספקים משויכים (בחירה מרובה).</div>
+        <div class="item-form">
+          <input id="itmName" class="text" placeholder="שם פריט" />
+          <input id="itmUnit" class="text" placeholder="יחידת מידה (יח׳/ק״ג/ל׳/...)" />
+          <input id="itmPrice" class="text" placeholder="מחיר ליחידה (₪)" />
+          <select id="itmSuppliers" multiple size="4"></select>
+          <button class="btn" id="btnAddItem">הוסף/עדכן פריט</button>
+          <button class="btn danger" id="btnDeleteItem">מחק פריט</button>
+        </div>
+        <div class="hint">פריטים קיימים (לחיצה לטעינה לטופס):</div>
+        <div id="itemsTable" class="table"></div>
+      </div>
+
+      <div class="item">
+        <h4>ייצוא/ייבוא (JSON)</h4>
+        <div class="toolbar">
+          <button class="btn" id="btnExport">ייצוא</button>
+          <button class="btn" id="btnImport">ייבוא</button>
+          <input id="fileImport" type="file" accept="application/json" style="display:none" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="editModal">
+    <form method="dialog" class="modal-card">
+      <h4>עריכת פריט</h4>
+      <label>שם פריט<input id="mName" class="text" /></label>
+      <label>יח׳ מידה<input id="mUnit" class="text" /></label>
+      <label>מחיר (₪)<input id="mPrice" class="text" inputmode="decimal" /></label>
+      <label>ספקים משויכים<select id="mSuppliers" multiple size="4"></select></label>
+      <div class="row">
+        <button id="btnModalSave" class="btn primary">שמור</button>
+        <button id="btnModalClose" class="btn">ביטול</button>
+      </div>
+    </form>
+  </dialog>
+
+  <nav class="nav">
+    <div class="bar">
+      <button class="tab active" data-target="view-orders" title="הזמנות">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+        <div class="label">הזמנות</div>
+      </button>
+      <button class="tab" data-target="view-history" title="היסטוריה">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3"/><path d="M12 7v5l3 3"/></svg>
+        <div class="label">היסטוריה</div>
+      </button>
+      <button class="tab" data-target="view-analytics" title="נתונים">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15v-5"/><path d="M12 15v-8"/><path d="M17 15v-3"/></svg>
+        <div class="label">נתונים</div>
+      </button>
+      <button class="tab" data-target="view-settings" title="הגדרות">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7 3.22l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 1 1 20.78 7l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .66.39 1.26 1 1.51.32.14.67.2 1.02.2H21a2 2 0 1 1 0 4h-.09a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <div class="label">הגדרות</div>
+      </button>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
