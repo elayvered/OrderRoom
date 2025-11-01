@@ -1,0 +1,55 @@
+
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Order Room</title>
+  <link rel="icon" href="./assets/logo_black.svg">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="hstack">
+      <img class="logo" src="./assets/logo_black.svg" alt="Sushi Room">
+      <div class="title">Order Room</div>
+      <span class="badge" id="ver">v1.0</span>
+    </div>
+  </div>
+
+  <div id="view" class="content">טוען…</div>
+
+  <div class="actions-bar" id="actionsBar" style="display:none">
+    <div class="actions">
+      <button class="icon-btn" id="btnCopy"><img src="./assets/icons/copy.svg" height="18"> העתק</button>
+      <button class="icon-btn" id="btnMail"><img src="./assets/icons/mail.svg" height="18"> מייל</button>
+      <button class="icon-btn" id="btnWa"><img src="./assets/icons/wa.svg" height="18"> וואטסאפ</button>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" data-route="home"><img src="./assets/icons/home.svg"><span>בית</span></a>
+    <a class="tab" data-route="orders"><img src="./assets/icons/orders.svg"><span>הזמנות</span></a>
+    <a class="tab" data-route="history"><img src="./assets/icons/history.svg"><span>היסטוריה</span></a>
+    <a class="tab" data-route="admin"><img src="./assets/icons/settings.svg"><span>הגדרות</span></a>
+  </nav>
+</div>
+
+<!-- Modals -->
+<div class="modal-back" id="modalBack">
+  <div class="modal" id="modal">
+    <h3 id="modalTitle">כותרת</h3>
+    <div id="modalBody" class="select-list"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast">נשמר</div>
+
+<script>
+  window.OR_CONFIG = Object.assign({VERSION:'Standalone-1.0', DATA_BASE:'./data'}, window.OR_CONFIG||{});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app.js"></script>
+</body>
+</html>
