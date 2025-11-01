@@ -5,17 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
   <link rel="icon" href="favicon.ico" />
-  <!-- Cache-busted asset names -->
-  <link rel="stylesheet" href="style.1.1.4.css" />
+  <link rel="stylesheet" href="style.1.2.0.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="logo-circle" aria-label="Order Room">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff" opacity=".96">
-          <circle cx="12" cy="12" r="8"/>
-        </svg>
-      </div>
+      <img src="logo.png" alt="SUSHI ROOM" class="logo-img" />
       <div class="brand-text">
         <div class="title">Order Room</div>
         <div class="sub">מערכת ניהול הזמנות והספקים החכמה של סושירום</div>
@@ -25,26 +20,46 @@
   </header>
 
   <main class="container">
+    <!-- Home -->
     <section id="view-home" class="screen active">
-      <h3>היום</h3>
-      <div id="homeCards" class="home-cards"></div>
-      <div class="hint">בחר ספק כדי לפתוח הזמנה</div>
+      <div class="block">
+        <div class="block-head">
+          <h3>היום צריך להזמין</h3>
+          <div class="muted" id="todayDate"></div>
+        </div>
+        <div id="homeOrders" class="home-cards"></div>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h3>היום צפויה אספקה</h3>
+        </div>
+        <div id="homeDeliveries" class="home-cards"></div>
+      </div>
     </section>
 
+    <!-- Orders -->
     <section id="view-orders" class="screen">
       <div class="toolbar">
         <label>ספק:</label>
         <select id="supplierSwitch"></select>
+
+        <div id="branchWrap" class="branch-wrap"></div>
+
+        <span class="flex"></span>
         <button class="btn primary" id="btnSave">שמור הזמנה</button>
         <button class="btn" id="btnWA">שלח בוואטסאפ</button>
         <button class="btn" id="btnCopy">העתק נוסח</button>
       </div>
-      <div class="hint">שדות ריקים לא יופיעו בהודעה.</div>
+
+      <div class="hint">שדות ריקים לא יופיעו בהודעה. Enter עובר לשדה הבא.</div>
       <div id="ordersGrid" class="grid"></div>
+
       <div class="panel notes">
         <label class="hint" for="notes">הערות להזמנה</label>
         <textarea id="notes" placeholder="למשל: לא לפרוס סלמון..."></textarea>
       </div>
+
       <div class="panel">
         <div class="panel-head">
           <h4>תצוגת נוסח</h4>
@@ -54,31 +69,66 @@
       </div>
     </section>
 
+    <!-- History -->
     <section id="view-history" class="screen">
-      <h3>היסטוריה</h3>
+      <div class="toolbar">
+        <input id="historyFilter" class="text" placeholder="סינון לפי פריטים (הפרד בפסיקים)" />
+        <button class="btn" id="btnClearFilter">נקה</button>
+      </div>
       <div id="historyList" class="list"></div>
     </section>
 
+    <!-- Settings -->
     <section id="view-settings" class="screen">
-      <h3>הגדרות</h3>
-      <div class="item">
-        <h4>ניהול ספקים</h4>
-        <div id="suppliersList" class="list"></div>
-        <div class="supplier-form">
-          <input id="supName" class="text" placeholder="שם ספק" />
-          <input id="supPhone" class="text" placeholder="מס׳ וואטסאפ (972...)" />
-          <select id="supDay" class="text">
-            <option value="all">כל הימים</option>
-            <option value="0">ראשון</option><option value="1">שני</option><option value="2">שלישי</option>
-            <option value="3">רביעי</option><option value="4">חמישי</option><option value="5">שישי</option><option value="6">שבת</option>
-          </select>
-          <button class="btn" id="btnAddSup">הוסף/עדכן ספק</button>
+      <div class="settings-grid">
+        <div class="card-settings">
+          <h3>ניהול ספקים</h3>
+          <div id="suppliersList" class="list"></div>
+          <div class="divider"></div>
+
+          <div class="form">
+            <div class="row">
+              <input id="supName" class="text grow" placeholder="שם ספק" />
+              <input id="supPhone" class="text" placeholder="מס׳ וואטסאפ (972...)" />
+            </div>
+
+            <div class="row">
+              <div class="group">
+                <label class="group-title">ימי הזמנה</label>
+                <div id="daysChips" class="chips"></div>
+              </div>
+              <div class="group">
+                <label class="group-title">מיפוי אספקה (לכל יום הזמנה)</label>
+                <div id="deliveryMapWrap" class="map-wrap"></div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="group">
+                <label class="group-title">נק' אספקה</label>
+                <div class="branch-select">
+                  <label class="chk"><input type="checkbox" id="brHills" /> הילס – אריק איינשטיין 3, הרצליה</label>
+                  <label class="chk"><input type="checkbox" id="brNordau" /> נורדאו – נורדאו 4, הרצליה</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row end">
+              <button class="btn" id="btnNew">נקה טופס</button>
+              <button class="btn primary" id="btnAddSup">הוסף/עדכן ספק</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-settings">
+          <h3>מידע</h3>
+          <div class="muted">בחר ספק מרשימת הספקים כדי לערוך. ניתן לקבוע מספר ימי הזמנה בשבוע, להגדיר לכל יום הזמנה את יום האספקה, ולבחור לאילו סניפים הספק מספק.</div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Floating, modern bottom nav -->
+  <!-- Floating bottom nav -->
   <nav class="nav">
     <div class="bar">
       <button class="tab active" data-view="view-home" aria-label="בית">
@@ -101,6 +151,6 @@
   </nav>
 
   <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
-  <script src="app.1.1.4.js"></script>
+  <script src="app.1.2.0.js"></script>
 </body>
 </html>
