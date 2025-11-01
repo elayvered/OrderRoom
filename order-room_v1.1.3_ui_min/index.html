@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=1.1.3" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-circle"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><circle cx="12" cy="12" r="8"/></svg></div>
+      <div class="brand-text">
+        <div class="title">Order Room</div>
+        <div class="sub">מערכת ניהול הזמנות והספקים החכמה של סושירום</div>
+      </div>
+      <div class="header-date" id="headerDate"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="view-home" class="screen active">
+      <h3>היום</h3>
+      <div id="homeCards" class="home-cards"></div>
+      <div class="hint">בחר ספק כדי לפתוח הזמנה</div>
+    </section>
+
+    <section id="view-orders" class="screen">
+      <div class="toolbar">
+        <label>ספק:</label>
+        <select id="supplierSwitch"></select>
+        <button class="btn primary" id="btnSave">שמור הזמנה</button>
+        <button class="btn" id="btnWA">שלח בוואטסאפ</button>
+        <button class="btn" id="btnCopy">העתק נוסח</button>
+      </div>
+      <div class="hint">שדות ריקים לא יופיעו בהודעה.</div>
+      <div id="ordersGrid" class="grid"></div>
+      <div class="panel notes">
+        <label class="hint" for="notes">הערות להזמנה</label>
+        <textarea id="notes" placeholder="למשל: לא לפרוס סלמון..."></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h4>תצוגת נוסח</h4>
+          <div id="count" class="muted">סה״כ פריטים: 0</div>
+        </div>
+        <pre id="preview" class="whats"></pre>
+      </div>
+    </section>
+
+    <section id="view-history" class="screen">
+      <h3>היסטוריה</h3>
+      <div id="historyList" class="list"></div>
+    </section>
+
+    <section id="view-settings" class="screen">
+      <h3>הגדרות</h3>
+      <div class="item">
+        <h4>ניהול ספקים</h4>
+        <div id="suppliersList" class="list"></div>
+        <div class="supplier-form">
+          <input id="supName" class="text" placeholder="שם ספק" />
+          <input id="supPhone" class="text" placeholder="מס׳ וואטסאפ (972...)" />
+          <select id="supDay" class="text">
+            <option value="all">כל הימים</option>
+            <option value="0">ראשון</option><option value="1">שני</option><option value="2">שלישי</option>
+            <option value="3">רביעי</option><option value="4">חמישי</option><option value="5">שישי</option><option value="6">שבת</option>
+          </select>
+          <button class="btn" id="btnAddSup">הוסף/עדכן ספק</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <div class="bar">
+      <button class="tab active" data-view="view-home">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+        <div class="label">בית</div>
+      </button>
+      <button class="tab" data-view="view-orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+        <div class="label">הזמנות</div>
+      </button>
+      <button class="tab" data-view="view-history">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3"/><path d="M12 7v5l3 3"/></svg>
+        <div class="label">היסטוריה</div>
+      </button>
+      <button class="tab" data-view="view-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <div class="label">הגדרות</div>
+      </button>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
+  <script src="script.js?v=1.1.3"></script>
+</body>
+</html>
