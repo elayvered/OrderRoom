@@ -1,222 +1,102 @@
-<!doctype html>
-<html lang="he" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
-  <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.1.4.0.css" />
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script>
-    window.ORDER_ROOM_SUPABASE = { url: "", anon: "" };
-    window.ORDER_ROOM_ORG_ID = "";
-  </script>
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <img src="logo_black.png" alt="Sushi Room" class="logo-img" />
-      <div class="brand-text">
-        <div class="title">Order Room</div>
-        <div class="sub">מערכת ניהול הזמנות והספקים החכמה של סושירום</div>
-      </div>
-      <div class="header-date" id="headerDate"></div>
-      <div id="cloudBadge" class="cloud-badge">Local</div>
-    </div>
-  </header>
-
-  <div id="authOverlay" class="auth-overlay hidden">
-    <div class="auth-card">
-      <h3>כניסה למערכת</h3>
-      <p class="muted">קבל קישור חד פעמי במייל (ללא סיסמה)</p>
-      <input id="authEmail" class="text full" type="email" placeholder="your@email.com" />
-      <div class="row end mt">
-        <button class="btn" id="btnAuthCancel">סגור</button>
-        <button class="btn primary" id="btnAuthSend">שלח קישור</button>
-      </div>
-      <div id="authHint" class="hint mt"></div>
-    </div>
-  </div>
-
-  <main class="container">
-    <section id="view-home" class="screen active">
-      <div class="block">
-        <div class="block-head">
-          <h3>היום צריך להזמין</h3>
-          <div class="muted" id="todayDate"></div>
-        </div>
-        <div id="homeOrders" class="home-cards"></div>
-      </div>
-
-      <div class="block">
-        <div class="block-head">
-          <h3>היום צפויה אספקה</h3>
-        </div>
-        <div id="homeDeliveries" class="home-cards"></div>
-      </div>
-    </section>
-
-    <section id="view-orders" class="screen">
-      <div class="toolbar">
-        <button id="supplierBtn" class="btn picker-btn">
-          <span id="supplierBtnLabel">בחר ספק</span>
-          <svg viewBox="0 0 24 24" class="chev"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        </button>
-        <div id="branchWrap" class="seg-wrap"></div>
-        <span class="flex"></span>
-        <button class="btn primary" id="btnSend">שלח הזמנה</button>
-        <button class="btn" id="btnCopy">העתק הזמנה</button>
-        <button class="btn" id="btnSave">שמור טיוטה</button>
-      </div>
-
-      <div class="hint hint-space">שדות ריקים לא יופיעו בהודעה. Enter עובר לשדה הבא.</div>
-      <div id="ordersGrid" class="grid"></div>
-
-      <div class="panel notes">
-        <label class="hint" for="notes">הערות להזמנה</label>
-        <textarea id="notes" placeholder="למשל: לא לפרוס סלמון..."></textarea>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h4>תצוגת נוסח</h4>
-          <div id="count" class="muted">סה״כ פריטים: 0</div>
-        </div>
-        <pre id="preview" class="whats"></pre>
-      </div>
-    </section>
-
-    <section id="view-history" class="screen">
-      <div class="toolbar">
-        <input id="historyFilter" class="text" placeholder="סינון לפי פריטים (הפרד בפסיקים)" />
-        <button class="btn" id="btnClearFilter">נקה</button>
-        <span class="flex"></span>
-        <button class="btn" id="btnExport">ייצוא JSON</button>
-        <label class="btn file">
-          ייבוא JSON
-          <input type="file" id="importFile" accept="application/json" hidden />
-        </label>
-      </div>
-      <div id="historyList" class="list"></div>
-    </section>
-
-    <section id="view-settings" class="screen">
-      <div class="settings-grid">
-        <div class="card-settings">
-          <h3>ניהול ספקים</h3>
-          <div id="suppliersList" class="list"></div>
-          <div class="divider"></div>
-          <div class="form">
-            <div class="row">
-              <input id="supName" class="text grow" placeholder="שם ספק" />
-              <input id="supPhone" class="text" placeholder="מס׳ וואטסאפ (972...)" />
-              <input id="supEmail" class="text" placeholder="אימייל (אופציונלי)" />
-            </div>
-            <div class="row">
-              <div class="group">
-                <label class="group-title">ימי הזמנה</label>
-                <div id="daysChips" class="chips"></div>
-              </div>
-              <div class="group">
-                <label class="group-title">מיפוי אספקה</label>
-                <div id="deliveryMapWrap" class="map-wrap"></div>
-              </div>
-            </div>
-            <div class="row">
-              <div class="group">
-                <label class="group-title">נק' אספקה</label>
-                <div class="branch-select">
-                  <label class="chk"><input type="checkbox" id="brHills" /> הילס</label>
-                  <label class="chk"><input type="checkbox" id="brNordau" /> נורדאו</label>
-                </div>
-              </div>
-              <div class="group">
-                <label class="group-title">ערוצי שליחה</label>
-                <div class="branch-select">
-                  <label class="chk"><input type="checkbox" id="chWA" checked/> וואטסאפ</label>
-                  <label class="chk"><input type="checkbox" id="chEmail" /> אימייל</label>
-                </div>
-              </div>
-            </div>
-            <div class="row end">
-              <button class="btn" id="btnNew">נקה טופס</button>
-              <button class="btn primary" id="btnAddSup">הוסף/עדכן ספק</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-settings">
-          <h3>עריכת פריטים (לפי ספק)</h3>
-          <div class="muted">בחר ספק מרשימת הספקים. ניתן לשנות שם, יחידה, מחיר, ולסדר את סדר ההצגה.</div>
-          <div id="itemsEditor" class="items-editor"></div>
-        </div>
-
-        <div class="card-settings">
-          <h3>חשבון וענן</h3>
-          <div class="muted">אפשר לעבוד מקומית בלבד או להתחבר ל־Supabase כדי לשמור היסטוריה בענן.</div>
-          <div class="form">
-            <div class="row">
-              <input id="sbUrl" class="text grow" placeholder="Supabase URL (https://...supabase.co)">
-              <input id="sbAnon" class="text" placeholder="Anon key">
-            </div>
-            <div class="row">
-              <input id="orgId" class="text grow" placeholder="Organization ID (UUID)">
-              <button class="btn" id="btnSaveCloud">שמור הגדרות ענן</button>
-              <button class="btn" id="btnAuthOpen">כניסה</button>
-              <button class="btn" id="btnSignOut">יציאה</button>
-            </div>
-            <div class="hint">סטטוס: <span id="cloudStatus">Local</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <nav class="nav">
-    <div class="bar">
-      <button class="tab active" data-view="view-home" aria-label="בית">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 10v10h14V10"></path></svg>
-        <div class="label">בית</div>
-      </button>
-      <button class="tab" data-view="view-orders" aria-label="הזמנות">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
-        <div class="label">הזמנות</div>
-      </button>
-      <button class="tab" data-view="view-history" aria-label="היסטוריה">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3"></path><path d="M12 7v5l3 3"></path></svg>
-        <div class="label">היסטוריה</div>
-      </button>
-      <button class="tab" data-view="view-settings" aria-label="הגדרות">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3.5"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg>
-        <div class="label">הגדרות</div>
-      </button>
-    </div>
-  </nav>
-
-  <div id="sendModal" class="modal">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card">
-      <h3>שליחת הזמנה</h3>
-      <div id="sendBtns" class="send-grid"></div>
-      <div class="row end mt">
-        <button class="btn" id="sendCancel">סגור</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="supplierModal" class="modal">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card">
-      <h3>בחר ספק</h3>
-      <div id="supplierGrid" class="send-grid"></div>
-      <div class="row end mt">
-        <button class="btn" id="supCancel">סגור</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
-
-  <script src="app.1.4.0.js"></script>
-</body>
-</html>
+<!doctype html> <html lang="he" dir="rtl"> <head> <meta charset="utf-8" /> <meta
+ name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, 
+user-scalable=no" /> <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של 
+סושירום</title> <link rel="icon" href="favicon.ico" /> <link rel="stylesheet" 
+href="style.1.4.0.css" /> <script src="https://unpkg.com/@supabase/supabase-
+js@2"></script> <script> window.ORDER_ROOM_SUPABASE = { url: "https://vquzmatigijeevwxowkp.supabase.co", anon: "<ANON_KEY>" }; 
+window.ORDER_ROOM_ORG_ID = ""; </script> </head> <body> <header class="topbar"> 
+<div class="brand"> <img src="logo_black.png" alt="Sushi Room" class="logo-img" 
+/> <div class="brand-text"> <div class="title">Order Room</div> <div 
+class="sub">מערכת ניהול הזמנות והספקים החכמה של סושירום</div> </div> <div 
+class="header-date" id="headerDate"></div> <div id="cloudBadge" class="cloud-
+badge">Local</div> </div> </header> <div id="authOverlay" class="auth-overlay 
+hidden"> <div class="auth-card"> <h3>כניסה למערכת</h3> <p class="muted">קבל 
+קישור חד פעמי במייל (ללא סיסמה)</p> <input id="authEmail" class="text full" 
+type="email" placeholder="your@email.com" /> <div class="row end mt"> <button 
+class="btn" id="btnAuthCancel">סגור</button> <button class="btn primary" 
+id="btnAuthSend">שלח קישור</button> </div> <div id="authHint" class="hint 
+mt"></div> </div> </div> <main class="container"> <section id="view-home" 
+class="screen active"> <div class="block"> <div class="block-head"> <h3>היום 
+צריך להזמין</h3> <div class="muted" id="todayDate"></div> </div> <div 
+id="homeOrders" class="home-cards"></div> </div> <div class="block"> <div 
+class="block-head"> <h3>היום צפויה אספקה</h3> </div> <div id="homeDeliveries" 
+class="home-cards"></div> </div> </section> <section id="view-orders" 
+class="screen"> <div class="toolbar"> <button id="supplierBtn" class="btn 
+picker-btn"> <span id="supplierBtnLabel">בחר ספק</span> <svg viewBox="0 0 24 24"
+ class="chev"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" 
+fill="none" stroke-linecap="round"/></svg> </button> <div id="branchWrap" 
+class="seg-wrap"></div> <span class="flex"></span> <button class="btn primary" 
+id="btnSend">שלח הזמנה</button> <button class="btn" id="btnCopy">העתק 
+הזמנה</button> <button class="btn" id="btnSave">שמור טיוטה</button> </div> <div 
+class="hint hint-space">שדות ריקים לא יופיעו בהודעה. Enter עובר לשדה הבא.</div> 
+<div id="ordersGrid" class="grid"></div> <div class="panel notes"> <label 
+class="hint" for="notes">הערות להזמנה</label> <textarea id="notes" 
+placeholder="למשל: לא לפרוס סלמון..."></textarea> </div> <div class="panel"> 
+<div class="panel-head"> <h4>תצוגת נוסח</h4> <div id="count" class="muted">סה״כ 
+פריטים: 0</div> </div> <pre id="preview" class="whats"></pre> </div> </section> 
+<section id="view-history" class="screen"> <div class="toolbar"> <input 
+id="historyFilter" class="text" placeholder="סינון לפי פריטים (הפרד בפסיקים)" />
+ <button class="btn" id="btnClearFilter">נקה</button> <span class="flex"></span>
+ <button class="btn" id="btnExport">ייצוא JSON</button> <label class="btn file">
+ ייבוא JSON <input type="file" id="importFile" accept="application/json" hidden 
+/> </label> </div> <div id="historyList" class="list"></div> </section> <section
+ id="view-settings" class="screen"> <div class="settings-grid"> <div 
+class="card-settings"> <h3>ניהול ספקים</h3> <div id="suppliersList" 
+class="list"></div> <div class="divider"></div> <div class="form"> <div 
+class="row"> <input id="supName" class="text grow" placeholder="שם ספק" /> 
+<input id="supPhone" class="text" placeholder="מס׳ וואטסאפ (972...)" /> <input 
+id="supEmail" class="text" placeholder="אימייל (אופציונלי)" /> </div> <div 
+class="row"> <div class="group"> <label class="group-title">ימי הזמנה</label> 
+<div id="daysChips" class="chips"></div> </div> <div class="group"> <label 
+class="group-title">מיפוי אספקה</label> <div id="deliveryMapWrap" class="map-
+wrap"></div> </div> </div> <div class="row"> <div class="group"> <label 
+class="group-title">נק' אספקה</label> <div class="branch-select"> <label 
+class="chk"><input type="checkbox" id="brHills" /> הילס</label> <label 
+class="chk"><input type="checkbox" id="brNordau" /> נורדאו</label> </div> </div>
+ <div class="group"> <label class="group-title">ערוצי שליחה</label> <div 
+class="branch-select"> <label class="chk"><input type="checkbox" id="chWA" 
+checked/> וואטסאפ</label> <label class="chk"><input type="checkbox" id="chEmail"
+ /> אימייל</label> </div> </div> </div> <div class="row end"> <button 
+class="btn" id="btnNew">נקה טופס</button> <button class="btn primary" 
+id="btnAddSup">הוסף/עדכן ספק</button> </div> </div> </div> <div class="card-
+settings"> <h3>עריכת פריטים (לפי ספק)</h3> <div class="muted">בחר ספק מרשימת 
+הספקים. ניתן לשנות שם, יחידה, מחיר, ולסדר את סדר ההצגה.</div> <div 
+id="itemsEditor" class="items-editor"></div> </div> <div class="card-settings"> 
+<h3>חשבון וענן</h3> <div class="muted">אפשר לעבוד מקומית בלבד או להתחבר 
+ל־Supabase כדי לשמור היסטוריה בענן.</div> <div class="form"> <div class="row"> 
+<input id="sbUrl" class="text grow" placeholder="Supabase URL 
+(https://...supabase.co)"> <input id="sbAnon" class="text" placeholder="Anon 
+key"> </div> <div class="row"> <input id="orgId" class="text grow" 
+placeholder="Organization ID (UUID)"> <button class="btn" id="btnSaveCloud">שמור
+ הגדרות ענן</button> <button class="btn" id="btnAuthOpen">כניסה</button> <button
+ class="btn" id="btnSignOut">יציאה</button> </div> <div class="hint">סטטוס: 
+<span id="cloudStatus">Local</span></div> </div> </div> </div> </section> 
+</main> <nav class="nav"> <div class="bar"> <button class="tab active" data-
+view="view-home" aria-label="בית"> <svg viewBox="0 0 24 24" fill="none" stroke-
+width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 
+10v10h14V10"></path></svg> <div class="label">בית</div> </button> <button 
+class="tab" data-view="view-orders" aria-label="הזמנות"> <svg viewBox="0 0 24 
+24" fill="none" stroke-width="2"><path d="M8 6h13"></path><path d="M8 
+12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 
+12h.01"></path><path d="M3 18h.01"></path></svg> <div class="label">הזמנות</div>
+ </button> <button class="tab" data-view="view-history" aria-label="היסטוריה"> 
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 
+3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3"></path><path d="M12 7v5l3 
+3"></path></svg> <div class="label">היסטוריה</div> </button> <button class="tab"
+ data-view="view-settings" aria-label="הגדרות"> <svg viewBox="0 0 24 24" 
+fill="none" stroke-width="2"><circle cx="12" cy="12" r="3.5"></circle><path 
+d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 
+1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 
+0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0
+ 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a2 2 0 0 1 0 4h-.09a1.65
+ 1.65 0 0 0-1.51 1Z"></path></svg> <div class="label">הגדרות</div> </button> 
+</div> </nav> <div id="sendModal" class="modal"> <div class="modal-
+backdrop"></div> <div class="modal-card"> <h3>שליחת הזמנה</h3> <div 
+id="sendBtns" class="send-grid"></div> <div class="row end mt"> <button 
+class="btn" id="sendCancel">סגור</button> </div> </div> </div> <div 
+id="supplierModal" class="modal"> <div class="modal-backdrop"></div> <div 
+class="modal-card"> <h3>בחר ספק</h3> <div id="supplierGrid" class="send-
+grid"></div> <div class="row end mt"> <button class="btn" 
+id="supCancel">סגור</button> </div> </div> </div> <div id="toast" 
+class="toast"><div class="box" id="toastMsg"></div></div> <script 
+src="app.1.4.0.js"></script> </body> </html>
