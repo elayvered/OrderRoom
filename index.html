@@ -5,20 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Order Room</title>
   <link rel="icon" href="./favicon.ico" />
-  <!-- קיימים -->
-  <link rel="stylesheet" href="./style.css?v=1.3.1" />
-  <link rel="stylesheet" href="./style.1.3.1.css" />
-  <!-- חדש: מודאל התחברות -->
-  <link rel="stylesheet" href="./auth.modal.1.4.1.css?v=1.4.1" />
+
+  <!-- קיימים אם יש -->
+  <!-- אל תשנה אם אין צורך, הבוט ינסה לטעון דינמית דרך boot.fallback -->
+  <link rel="stylesheet" href="./style.css?v=1.4.2" onerror="this.remove()" />
+  <link rel="stylesheet" href="./style.1.4.0.css?v=1.4.2" onerror="this.remove()" />
+  <link rel="stylesheet" href="./style.1.3.1.css?v=1.4.2" onerror="this.remove()" />
+
+  <!-- מודאל התחברות -->
+  <link rel="stylesheet" href="./auth.modal.1.4.1.css?v=1.4.2" />
+
   <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-  <div id="app-root">
-    <!-- אם האפליקציה הקיימת מייצרת את ה-UI דרך ה-JS, השורש הזה ישמש עוגן. -->
-  </div>
+  <div id="app-root"></div>
 
-  <!-- מודאל התחברות (Email+Password או Magic Link) -->
+  <!-- מודאל התחברות -->
   <div id="auth-modal" class="auth-modal hidden" dir="rtl" aria-hidden="true">
     <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <button class="auth-close" data-auth-close>&times;</button>
@@ -49,13 +52,11 @@
     </div>
   </div>
 
-  <!-- קובץ האפליקציה הקיים (שמרנדר את ה-UI) -->
-  <script src="./script.js?v=1.3.1" defer></script>
-  <script src="./app.1.3.1.js?v=1.3.1" defer></script>
-
   <!-- שכבת Auth וסנכרון 'בית' -->
-  <script src="./app.auth.1.4.1.js?v=1.4.1"></script>
+  <script src="./app.auth.1.4.1.js?v=1.4.2"></script>
   <!-- תיקון ניווט תחתון והפעלת בית -->
-  <script src="./ui.navfix.1.4.1.js?v=1.4.1"></script>
+  <script src="./ui.navfix.1.4.1.js?v=1.4.2"></script>
+  <!-- Boot Fallback שמוודא שיש מסך בית גם אם קבצי האפליקציה לא נטענו -->
+  <script src="./boot.fallback.1.4.2.js?v=1.4.2"></script>
 </body>
 </html>
