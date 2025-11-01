@@ -1,0 +1,18 @@
+/* auth.modal.1.4.1.css */
+.auth-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;backdrop-filter:saturate(120%) blur(6px);z-index:9999}
+.auth-modal.hidden{display:none}
+.auth-card{width:min(420px,92vw);background:#fff;border-radius:20px;box-shadow:0 12px 40px rgba(16,24,40,.18);padding:22px 20px 18px;direction:rtl;position:relative}
+.auth-close{position:absolute;inset-inline-end:10px;top:10px;border:0;background:#f2f4f7;width:36px;height:36px;border-radius:12px;font-size:20px;cursor:pointer}
+.auth-tabs{display:flex;gap:8px;margin:8px 0 14px}
+.auth-tabs .tab{flex:1;border:0;border-radius:14px;padding:10px 12px;background:#f3f4f6;cursor:pointer;font-weight:600}
+.auth-tabs .tab.active{background:#0f172a;color:#fff}
+.auth-fields{display:grid;gap:10px}
+.auth-fields label{font-size:13px;color:#475569;margin-bottom:2px}
+.auth-fields input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #e5e7eb;outline:none}
+.auth-fields input:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.pw-wrap.hidden{display:none}
+.auth-actions{display:flex;gap:10px;align-items:center;margin-top:12px}
+.auth-actions .primary{flex:1;background:#111827;color:#fff;border:0;padding:12px 16px;border-radius:14px;font-weight:700;cursor:pointer}
+.auth-actions .link{border:0;background:transparent;color:#0ea5e9;cursor:pointer}
+.auth-feedback{min-height:20px;color:#ef4444;margin-top:8px}
+body.is-authed .require-auth{display:none}
