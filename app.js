@@ -1,207 +1,354 @@
 
-// Order Room v1.4.1 - localStorage only (no DB, no login)
-(function(){
-  const $ = (s,el=document)=> el.querySelector(s);
-  const $$ = (s,el=document)=> [...el.querySelectorAll(s)];
+// Order Room v1.6 core
+const $=(s,e=document)=>e.querySelector(s), $$=(s,e=document)=>[...e.querySelectorAll(s)];
+const DAY=['א','ב','ג','ד','ה','ו','ש'];
+const CFG_KEY='or_cfg_v160', ORD_KEY='or_orders_v160';
 
-  const SUPPLIERS = [
-    { id:'mw', name:'מזרח מערב', phone:'+9725044320036', branches:[{id:'hills',name:'הילס',address:'אריק איינשטיין 3, הרצליה'},{id:'nord',name:'נורדאו',address:'נורדאו 4, הרצליה'}] },
-    { id:'diplomat', name:'דיפלומט', phone:'', branches:[{id:'hills',name:'הילס'},{id:'nord',name:'נורדאו'}] }
-  ];
+function read(k,d){ try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d} }
+function write(k,v){ localStorage.setItem(k, JSON.stringify(v)) }
 
-  const ITEMS = {
-    mw: ["אבקת וואסבי", "א. ביצים לאיון", "אטריות אורז 3 מ\"מ", "ג'ינג'ר לבן", "מגש 03", "מגש 07", "מחית צ'ילי בשמן", "מחית קארי ירוק", "מחית קארי אדום", "תמרהינדי", "מיסו לבן דאשי", "מירין גדול", "סויה ירוק גדול", "סויה ללג גדול", "סאקה גדול", "פנקו", "רוטב דגים 4 ל", "רוטב פטריות", "שומשום שחור", "שמן צ'ילי", "שמן שומשום", "קרם קוקוס גדול", "טמפורה", "יוזו גדול", "יוזו גדול ללא מלח", "סוכר דקלים", "צדפות שימורים", "בצל מטוגן", "אבקת חרדל יפני", "טוגראשי", "טום יאם", "קנפיו קילו", "מגש מסיבה L", "מגש מסיבה M", "סויה גולדן מאונטן", "חטיפי אצות", "סויה כהה", "חומץ אורז", "אנשובי בשמן גדול", "אצות נורי קוריאה", "אורז יסמין", "שיפודי קשר", "אבקת מאצה", "ליקר מאצה", "רשת לסיר אורז", "כף ווק", "ווק", "דפי רשת אורז", "אצות וואקמה", "אצות קומבו", "דאשי", "אררה", "צ’ופסטיקס חבק שחור", "שיפודי יקיטורי"],
-    diplomat: []
-  };
+let CFG = null;
+let currentSupplierId = null;
+let currentDeliverDow = null;
+let currentBranch = null;
 
-  const STATE = {
-    currentSupplier: null,
-    selectedBranch: null,
-    items: [],
-  };
+function nowLabel(){ const d=new Date(); return 'יום '+DAY[d.getDay()]+' • '+d.toLocaleDateString('he-IL') }
+function supplierById(id){ return CFG.suppliers.find(s=>s.id===id) }
+function suppliersToOrderToday(){ const g=new Date().getDay(); return CFG.suppliers.filter(s=> s.dayPairs.some(p=>p.order===g)) }
+function suppliersArrivingToday(){ const g=new Date().getDay(); return CFG.suppliers.filter(s=> s.dayPairs.some(p=>p.deliver===g)) }
 
-  function setView(name){
-    $$(".view").forEach(v=>v.classList.remove('active'));
-    $("#view-"+name).classList.add('active');
-    $$(".tab").forEach(t=> t.classList.toggle('active', t.dataset.view===name));
-    if(name==='home') renderHome();
-    if(name==='history') renderHistory();
-  }
+function setView(v){
+  $$('.view').forEach(x=>x.classList.remove('active'));
+  $('#view-'+v).classList.add('active');
+  $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v));
+  if(v==='home') renderHome();
+  if(v==='orders') initOrderForm();
+  if(v==='history') renderHistory();
+  if(v==='settings') renderSettingsList();
+}
 
-  function todayStr(){
-    return new Date().toLocaleString('he-IL', { dateStyle:'full', timeStyle:'short' });
-  }
+document.addEventListener('click', e=>{
+  const t=e.target.closest('.tab'); if(t) setView(t.dataset.view);
+});
 
-  function renderHome(){
-    $("#home-date").textContent = todayStr();
-    const wrap = $("#home-suppliers"); wrap.innerHTML = "";
-    SUPPLIERS.forEach(s=>{
-      const card = document.createElement('div');
-      card.className = 'supplier-card';
-      card.innerHTML = `<div class="supplier-name">${s.name}</div>
-                        <div class="supplier-meta">לחץ לפתיחת הזמנה</div>`;
-      card.onclick = ()=> openSupplier(s.id);
-      wrap.appendChild(card);
-    });
-
-    const recent = getOrders().slice(0,10);
-    const list = $("#home-recent"); list.innerHTML="";
-    recent.forEach(o=>{
-      const d = new Date(o.created_at);
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = `<div>${d.toLocaleString('he-IL')}</div><div class="muted">${o.supplier_name} • ${o.branch_name||''}</div>`;
-      list.appendChild(row);
-    });
-  }
-
-  function openSupplier(sid){
-    const sup = SUPPLIERS.find(x=>x.id===sid);
-    STATE.currentSupplier = sup;
-    $("#orders-title").textContent = "הזמנה – " + sup.name;
-
-    const bt = $("#branch-toggle"); bt.innerHTML = "";
-    if(sup.branches?.length){
-      STATE.selectedBranch = sup.branches[0];
-      const seg = document.createElement('div');
-      seg.className='segmented';
-      sup.branches.forEach((b,i)=>{
-        const btn = document.createElement('button');
-        btn.textContent = b.name;
-        if(i===0) btn.classList.add('active');
-        btn.onclick = ()=>{
-          STATE.selectedBranch = b;
-          $$(".segmented button", seg).forEach(x=>x.classList.remove('active'));
-          btn.classList.add('active');
-        };
-        seg.appendChild(btn);
-      });
-      bt.appendChild(seg);
-    }else{
-      STATE.selectedBranch = null;
-    }
-
-    const names = ITEMS[sup.id] || [];
-    STATE.items = names.map((name, idx)=> ({ id:String(idx+1), name, unit:"", qty:0 }));
-    renderItems();
-    setView('orders');
-
-    const last = getOrders().find(o=> o.supplier_id===sup.id);
-    if(last){
-      const map = new Map(last.items.map(i=> [i.name, i.qty]));
-      $$("#items-list .item-row").forEach(row=>{
-        const n = $(".item-title", row).textContent.trim();
-        if(map.has(n)){
-          const el = $(".qty input", row);
-          el.placeholder = map.get(n);
-          el.classList.add("muted");
-        }
-      });
-    }
-  }
-
-  function renderItems(){
-    const cont = $("#items-list"); cont.innerHTML="";
-    if(!STATE.items.length){
-      cont.innerHTML = `<div class="muted">אין פריטים לספק זה</div>`; return;
-    }
-    STATE.items.forEach(it=>{
-      const row = document.createElement("div");
-      row.className="item-row"; row.dataset.id = it.id;
-      row.innerHTML = `<div class="item-title">${it.name}</div>
-        <div class="qty">
-          <input type="number" min="0" step="1" inputmode="numeric" placeholder="">
-          <span class="unit">${it.unit||""}</span>
-        </div>`;
-      cont.appendChild(row);
-    });
-  }
-
-  function orderText(order){
-    const d = new Date(order.created_at);
-    const lines = [
-      `הזמנת סחורה - סושי רום - ${order.supplier_name}`,
-      `תאריך: ${d.toLocaleString('he-IL')}`,
-      order.branch_name ? `סניף: ${order.branch_name}${order.branch_address?(' – '+order.branch_address):''}` : null,
-      "פירוט הזמנה -",
-      ...order.items.map(p=> `• ${p.name} – ${p.qty}`),
-      order.notes ? "" : null,
-      order.notes || null,
-      "",
-      "אודה לאישורכם בהודעה חוזרת"
-    ].filter(Boolean);
-    return lines.join("\n");
-  }
-
-  function getOrders(){
-    try { return JSON.parse(localStorage.getItem('or_orders')||'[]'); }
-    catch(_){ return []; }
-  }
-  function setOrders(arr){
-    localStorage.setItem('or_orders', JSON.stringify(arr));
-  }
-
-  function saveOrder(){
-    const sup = STATE.currentSupplier;
-    if(!sup) return alert("בחר ספק");
-    const picked = [];
-    $$("#items-list .item-row").forEach(row=>{
-      const input = $(".qty input", row);
-      const q = Number(input.value);
-      if(q>0){
-        const name = $(".item-title", row).textContent.trim();
-        picked.push({ name, qty:q }); // FIX: push (not append)
-      }
-    });
-    if(!picked.length) return alert("לא נבחרו פריטים");
-
-    const order = {
-      id: String(Date.now()),
-      created_at: new Date().toISOString(),
-      supplier_id: sup.id,
-      supplier_name: sup.name,
-      branch_id: STATE.selectedBranch?.id || null,
-      branch_name: STATE.selectedBranch?.name || null,
-      branch_address: STATE.selectedBranch?.address || null,
-      items: picked,
-      notes: $("#order-notes").value || ""
-    };
-    const all = getOrders();
-    all.unshift(order);
-    setOrders(all);
-
-    const text = orderText(order);
-    $("#btn-copy").onclick = ()=> { navigator.clipboard.writeText(text); alert("הועתק"); };
-    $("#btn-whatsapp").onclick = ()=> {
-      const phone = (sup.phone||"").replace(/[^+\d]/g,"");
-      const link = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-      window.open(link,"_blank");
-    };
-    alert("נשמר בהצלחה");
-  }
-
-  function renderHistory(){
-    const list = $("#history-list"); list.innerHTML="";
-    const arr = getOrders();
-    if(!arr.length){ list.innerHTML = `<div class="muted">אין הזמנות עדיין</div>`; return; }
-    arr.forEach(o=>{
-      const d = new Date(o.created_at);
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = `<div>${d.toLocaleString('he-IL')}</div><div class="muted">${o.supplier_name} • ${o.branch_name||''}</div>`;
-      list.appendChild(row);
-    });
-  }
-
-  // events
-  document.addEventListener("DOMContentLoaded", ()=>{
-    document.body.addEventListener('click', (e)=>{
-      const t = e.target.closest('.tab');
-      if(t) setView(t.dataset.view);
-    });
-    $("#btn-back-home").onclick = ()=> setView('home');
-    $("#btn-save").onclick = saveOrder;
-
-    setView('home');
+function renderHome(){
+  $('#home-date').textContent = nowLabel();
+  const enter = $('#home-to-enter'); enter.innerHTML='';
+  suppliersToOrderToday().forEach(s=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML = `<div><strong>${s.name}</strong><div class="small">לחץ לפתיחת הזמנה</div></div><button class="btn">פתח</button>`;
+    r.querySelector('.btn').onclick=()=>openOrderFor(s.id);
+    r.onclick=e=>{ if(e.target.tagName!=='BUTTON') openOrderFor(s.id) };
+    enter.appendChild(r);
   });
-})();
+  if(!enter.children.length) enter.innerHTML='<div class="small">אין ספקים להגשה היום</div>';
+
+  const arr = $('#home-arrivals'); arr.innerHTML='';
+  suppliersArrivingToday().forEach(s=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div><strong>${s.name}</strong><div class="small">אספקה צפויה היום</div></div>`;
+    arr.appendChild(r);
+  });
+  if(!arr.children.length) arr.innerHTML='<div class="small">אין אספקות</div>';
+
+  const recent = read(ORD_KEY,[]).slice(0,10);
+  const list=$('#home-recent'); list.innerHTML='';
+  recent.forEach(o=>{
+    const d=new Date(o.created_at);
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML = `<div>${d.toLocaleDateString('he-IL')}</div><div class="small">${o.supplier_name} • ${o.branch_name||''}</div>`;
+    list.appendChild(row);
+  });
+  if(!list.children.length) list.innerHTML = '<div class="small">אין הזמנות קודמות</div>';
+}
+
+function defaultDeliverDayFor(id){
+  const g=new Date().getDay();
+  const s=supplierById(id);
+  const p=s?.dayPairs?.find(p=>p.order===g);
+  return p? p.deliver : g;
+}
+function labelDeliver(dow){ return 'יום '+DAY[dow] }
+
+function initOrderForm(){
+  if(!currentSupplierId && CFG.suppliers[0]) currentSupplierId = CFG.suppliers[0].id;
+  openOrderFor(currentSupplierId);
+  $('#btn-change-supplier').onclick = openSupplierPicker;
+  $('#btn-open-delivery').onclick = ()=> $('#deliver-modal').style.display='flex';
+  $('#deliver-close').onclick = ()=> $('#deliver-modal').style.display='none';
+}
+
+function openSupplierPicker(){
+  const box = $('#supplier-modal'); box.style.display='flex';
+  const g = $('#supplier-grid'); g.innerHTML='';
+  CFG.suppliers.forEach(s=>{
+    const card=document.createElement('div'); card.className='supplier-card';
+    card.innerHTML = `<div><strong>${s.name}</strong><div class="small">${s.phone||s.email||''}</div></div><span>›</span>`;
+    card.onclick = ()=>{ box.style.display='none'; currentSupplierId=s.id; openOrderFor(s.id); };
+    g.appendChild(card);
+  });
+  $('#supplier-close').onclick=()=> box.style.display='none';
+}
+
+function openOrderFor(id){
+  const s = supplierById(id); if(!s) return;
+  currentSupplierId=id;
+  $('#orders-supplier-name').textContent=s.name;
+
+  // Branches segmented
+  const bt = $('#branch-toggle'); bt.innerHTML='';
+  const branches=[];
+  if(s.branches.hills) branches.push({id:'hills',name:'הילס',address:'אריק איינשטיין 3, הרצליה'});
+  if(s.branches.nord) branches.push({id:'nord',name:'נורדאו',address:'נורדאו 4, הרצליה'});
+  currentBranch = branches[0]||null;
+  const seg=document.createElement('div'); seg.className='segmented';
+  branches.forEach((b,i)=>{
+    const btn=document.createElement('button'); btn.textContent=b.name;
+    if(i===0) btn.classList.add('active');
+    btn.onclick=()=>{ currentBranch=b; $$('#branch-toggle .segmented button').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); showLastQtyHints(); };
+    seg.appendChild(btn);
+  });
+  bt.appendChild(seg);
+
+  // Delivery default label and chips builder
+  currentDeliverDow = defaultDeliverDayFor(id);
+  $('#deliver-label').textContent = labelDeliver(currentDeliverDow);
+  const chips=$('#deliver-chips'); chips.innerHTML='';
+  DAY.forEach((d,i)=>{
+    const b=document.createElement('button'); b.textContent='יום '+d;
+    if(i===currentDeliverDow) b.classList.add('active');
+    b.onclick=()=>{
+      currentDeliverDow=i;
+      $('#deliver-label').textContent=labelDeliver(currentDeliverDow);
+      $('#deliver-modal').style.display='none';
+      $$('#deliver-chips button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    chips.appendChild(b);
+  });
+
+  // Items list
+  const list=$('#items-list'); list.innerHTML='';
+  (s.items||[]).forEach(it=>{
+    const row=document.createElement('div'); row.className='item-row'; row.dataset.id=it.id;
+    row.innerHTML = `<div><div class="item-title">${it.name}</div><div class="small" data-last="${it.name}"></div></div>
+      <div class="qty"><input type="number" inputmode="numeric" min="0" step="1" placeholder="0"><span class="small">${it.unit||''}</span></div>`;
+    list.appendChild(row);
+  });
+
+  function showLastQtyHints(){
+    const orders=read(ORD_KEY,[]);
+    const last = orders.find(o=> o.supplier_id===s.id && (currentBranch? o.branch_id===currentBranch.id : true));
+    const map = new Map((last?.items||[]).map(i=>[i.name, i.qty]));
+    $$('#items-list .item-row').forEach(r=>{
+      const name = r.querySelector('.item-title').textContent.trim();
+      const el = r.querySelector('[data-last]');
+      if(map.has(name)) el.textContent='כמות אחרונה: '+map.get(name); else el.textContent='';
+    });
+  }
+  showLastQtyHints();
+
+  // Actions
+  $('#btn-save').onclick = ()=> saveOrder(s);
+  $('#btn-send').onclick = ()=> sendOrderFlow(s);
+}
+
+function collectPicked(){
+  const out=[];
+  $$('#items-list .item-row').forEach(r=>{
+    const q = Number(r.querySelector('input').value);
+    if(q>0) out.push({name:r.querySelector('.item-title').textContent.trim(), qty:q});
+  });
+  return out;
+}
+function buildOrder(s){
+  return {
+    id:String(Date.now()), created_at:new Date().toISOString(),
+    supplier_id:s.id, supplier_name:s.name,
+    branch_id:currentBranch?.id||null, branch_name:currentBranch?.name||null, branch_address:currentBranch?.address||null,
+    deliver_dow: currentDeliverDow,
+    items: collectPicked(),
+    notes: $('#order-notes').value||''
+  };
+}
+function orderText(o){
+  const d=new Date(o.created_at);
+  const lines=[
+    `הזמנת סחורה - סושי רום - ${o.supplier_name}`,
+    `תאריך הזמנה: יום ${DAY[d.getDay()]} ${d.toLocaleDateString('he-IL')}`,
+    `יום אספקה: יום ${DAY[o.deliver_dow??d.getDay()]}`,
+    o.branch_name? `סניף: ${o.branch_name}${o.branch_address? ' – '+o.branch_address: ''}`: null,
+    'פירוט הזמנה -',
+    ...o.items.map(p=> `• ${p.name} – ${p.qty}`),
+    o.notes||null,
+    '', 'אודה לאישורכם בהודעה חוזרת'
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+function saveOrder(s){
+  const items=collectPicked(); if(!items.length){ alert('לא נבחרו פריטים'); return }
+  const o=buildOrder(s);
+  const all=read(ORD_KEY,[]); all.unshift(o); write(ORD_KEY,all);
+  setView('history');
+}
+function sendOrderFlow(s){
+  const items=collectPicked(); if(!items.length){ alert('לא נבחרו פריטים'); return }
+  const o=buildOrder(s);
+  const all=read(ORD_KEY,[]); all.unshift(o); write(ORD_KEY,all);
+  const text = orderText(o);
+  const phone=(s.phone||'').replace(/[^+\d]/g,''); const email=(s.email||'').trim();
+  $('#send-desc').textContent='בחר דרך שליחה';
+  const wa=$('#send-whatsapp'), em=$('#send-email');
+  wa.style.display = phone? 'inline-flex':'none';
+  em.style.display = email? 'inline-flex':'none';
+  $('#send-copy').onclick = ()=>{ navigator.clipboard.writeText(text); alert('הועתק'); };
+  if(phone) wa.onclick=()=> window.open('https://wa.me/'+encodeURIComponent(phone)+'?text='+encodeURIComponent(text),'_blank');
+  if(email) em.onclick=()=> location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('הזמנת סחורה')+'&body='+encodeURIComponent(text);
+  $('#send-close').onclick=()=> $('#send-modal').style.display='none';
+  $('#send-modal').style.display='flex';
+}
+
+// SETTINGS
+function renderSettingsList(){
+  $('#settings-title').textContent='ניהול ספקים';
+  const body=$('#settings-body'); body.innerHTML='';
+  CFG.suppliers.forEach(s=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML=`<div><strong>${s.name}</strong><div class="small">${s.phone||s.email||''}</div></div>
+      <div class="inline">
+        <button class="btn ghost" data-edit>עריכת ספק</button>
+        <button class="btn ghost" data-items>ניהול פריטים</button>
+      </div>`;
+    row.querySelector('[data-edit]').onclick=()=> renderSupplierEditor(s.id);
+    row.querySelector('[data-items]').onclick=()=> renderSupplierEditor(s.id, true);
+    row.onclick = (e)=>{ if(!e.target.closest('button')) renderSupplierEditor(s.id) };
+    body.appendChild(row);
+  });
+}
+
+function daySelect(val, typ){
+  const opts = DAY.map((d,i)=>`<option value="${i}" ${i===val?'selected':''}>יום ${d}</option>`).join('');
+  return `<select data-type="${typ}">${opts}</select>`;
+}
+
+function renderSupplierEditor(sid, openItems=false){
+  const s = supplierById(sid);
+  $('#settings-title').textContent='עריכת ספק – '+s.name;
+  const body=$('#settings-body'); body.innerHTML='';
+
+  const back=document.createElement('div'); back.className='row';
+  back.innerHTML=`<button class="btn ghost" id="btn-back-settings">חזרה לרשימה</button>`;
+  back.querySelector('#btn-back-settings').onclick=()=>{ $('#settings-title').textContent='ניהול ספקים'; renderSettingsList() };
+  body.appendChild(back);
+
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`
+    <div class="row"><div>שם ספק</div><input class="btn" data-field="name" value="${s.name}"></div>
+    <div class="row"><div>טלפון וואטסאפ (אופציונלי)</div><input class="btn" data-field="phone" value="${s.phone||''}"></div>
+    <div class="row"><div>אימייל (אופציונלי)</div><input class="btn" data-field="email" value="${s.email||''}"></div>
+    <div class="row"><div>סניפים פעילים</div>
+      <div class="inline">
+        <label><input type="checkbox" data-branch="hills" ${s.branches?.hills?'checked':''}> הילס</label>
+        <label><input type="checkbox" data-branch="nord" ${s.branches?.nord?'checked':''}> נורדאו</label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="h-lg">ימי הזמנה / אספקה</div>
+      <div data-daypairs></div>
+      <button class="btn" data-add-pair>הוסף שורה</button>
+    </div>
+    <div class="card">
+      <div class="inline" style="justify-content:space-between;width:100%">
+        <div class="h-lg">ניהול פריטים</div>
+        <button class="btn" data-add-item>הוסף פריט</button>
+      </div>
+      <div data-items></div>
+    </div>
+  `;
+  body.appendChild(card);
+
+  card.querySelectorAll('input[data-field]').forEach(inp=>{
+    inp.oninput = ()=>{ s[inp.dataset.field] = inp.value; write(CFG_KEY, CFG) };
+  });
+  card.querySelectorAll('input[data-branch]').forEach(ch=>{
+    ch.onchange = ()=>{ s.branches[ch.dataset.branch] = ch.checked; write(CFG_KEY, CFG) };
+  });
+
+  const dpWrap = card.querySelector('[data-daypairs]');
+  function renderPairs(){
+    dpWrap.innerHTML='';
+    (s.dayPairs||[]).forEach((p,i)=>{
+      const row=document.createElement('div'); row.className='row';
+      row.innerHTML = `<div>שורה ${i+1}</div>
+        <div class="inline">
+          ${daySelect(p.order,'order')}
+          ${daySelect(p.deliver,'deliver')}
+          <button class="btn ghost" data-rm>מחק</button>
+        </div>`;
+      row.querySelector('[data-rm]').onclick=()=>{ s.dayPairs.splice(i,1); write(CFG_KEY, CFG); renderPairs() };
+      row.querySelector('select[data-type=order]').onchange=(e)=>{ p.order=+e.target.value; write(CFG_KEY, CFG) };
+      row.querySelector('select[data-type=deliver]').onchange=(e)=>{ p.deliver=+e.target.value; write(CFG_KEY, CFG) };
+      dpWrap.appendChild(row);
+    });
+  }
+  renderPairs();
+  card.querySelector('[data-add-pair]').onclick=()=>{ (s.dayPairs||(s.dayPairs=[])).push({order:0,deliver:1}); write(CFG_KEY, CFG); renderPairs() };
+
+  const itWrap = card.querySelector('[data-items]');
+  function renderItems(){
+    itWrap.innerHTML='';
+    (s.items||[]).forEach((it,i)=>{
+      const row=document.createElement('div'); row.className='row';
+      row.innerHTML=`
+        <div style="flex:1;display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;align-items:center">
+          <input value="${it.name||''}" data-k="name" class="btn">
+          <input value="${it.unit||''}" data-k="unit" class="btn">
+          <input value="${it.price||''}" data-k="price" class="btn" inputmode="decimal">
+        </div>
+        <div class="inline">
+          <button class="btn ghost" data-up>מעלה</button>
+          <button class="btn ghost" data-down>מוריד</button>
+          <button class="btn" data-del>מחק</button>
+        </div>`;
+      row.querySelectorAll('input').forEach(inp=>{
+        inp.oninput = ()=>{ it[inp.dataset.k]=inp.value; write(CFG_KEY, CFG) };
+      });
+      row.querySelector('[data-del]').onclick=()=>{ s.items.splice(i,1); write(CFG_KEY, CFG); renderItems() };
+      row.querySelector('[data-up]').onclick=()=>{ if(i>0){ const t=s.items[i-1]; s.items[i-1]=s.items[i]; s.items[i]=t; write(CFG_KEY, CFG); renderItems() } };
+      row.querySelector('[data-down]').onclick=()=>{ if(i<s.items.length-1){ const t=s.items[i+1]; s.items[i+1]=s.items[i]; s.items[i]=t; write(CFG_KEY, CFG); renderItems() } };
+      itWrap.appendChild(row);
+    });
+  }
+  renderItems();
+  if(openItems) itWrap.scrollIntoView({behavior:'smooth'});
+}
+
+// Bootstrap
+async function loadConfig(){
+  // Try data file then fallback to localStorage seed
+  try{
+    const res = await fetch('data/suppliers.json?v='+Date.now());
+    const j = await res.json();
+    const merged = read(CFG_KEY, j);
+    // If no local edits yet, use fetched
+    if(!localStorage.getItem(CFG_KEY)) write(CFG_KEY, merged);
+    CFG = read(CFG_KEY, j);
+  }catch(e){
+    CFG = read(CFG_KEY, {suppliers:[]});
+  }
+}
+function renderHistory(){
+  const list=$('#history-list'); list.innerHTML='';
+  read(ORD_KEY,[]).forEach(o=>{
+    const d=new Date(o.created_at);
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div>${d.toLocaleDateString('he-IL')}</div><div class="small">${o.supplier_name} • ${o.branch_name||''} • יום אספקה: יום ${DAY[o.deliver_dow??d.getDay()]}</div>`;
+    list.appendChild(r);
+  });
+  if(!list.children.length) list.innerHTML='<div class="small">אין הזמנות</div>';
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await loadConfig();
+  setView('home');
+});
