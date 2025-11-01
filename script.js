@@ -1,357 +1,123 @@
 (function(){
   const K = {
-    orders: "or_v111_orders",
-    draft: "or_v111_draft",
-    suppliers: "or_v111_suppliers",
-    activeSupplier: "or_v111_active_supplier",
-    items: "or_v111_items",
-    notes: "or_v111_notes"
+    suppliers: "or_v113_suppliers",
+    items: "or_v113_items",
+    active: "or_v113_active",
+    orders: "or_v113_orders",
+    draft: "or_v113_draft",
+    notes: "or_v113_notes"
   };
 
-  // Allow reset via ?reset=1
-  try {
-    const p = new URLSearchParams(location.search);
-    if (p.get("reset") === "1") {
-      Object.values(K).forEach(k => localStorage.removeItem(k));
-    }
-  } catch(e){}
+  const q = new URLSearchParams(location.search);
+  if (q.get("reset")==="1"){ Object.values(K).forEach(k=>localStorage.removeItem(k)); }
 
   const DEFAULT_SUPPLIERS = [
     { name: "מזרח מערב", phone: "9725044320036", day: "all" },
     { name: "דיפלומט", phone: "972500000000", day: "all" }
   ];
+  const MM_ITEMS = ["אבקת וואסבי","א.ביצים לאיון","אטריות אורז 3 מ","ג'ינג'ר לבן","מגש 03","מגש 07","מחית צ'ילי בשמן","מחית קארי ירוק","מחית קארי אדום","תמרהינדי","מיסו לבן דאשי","מירין גדול","סויה ירוק גדול","סויה ללג גדול","סאקה גדול","פנקו","רוטב דגים 4 ל","רוטב פטריות","שומשום שחור","שמן צ'ילי","שמן שומשום","קרם קוקוס גדול","טמפורה","יוזו גדול","יוזו גדול ללא מלח","סוכר דקלים","צדפות שימורים","בצל מטוגן","אבקת חרדל יפני","טוגראשי","טום יאם","קנפיו קילו","מגש מסיבה L","מגש מסיבה M","סויה גולדן מאונטן","חטיפי אצות","סויה כהה","חומץ אורז","אנשובי בשמן גדול","אצות נורי קוריאה","אורז יסמין","שיפודי קשר","אבקת מאצה","ליקר מאצה","רשת לסיר אורז","כף ווק","ווק","דפי רשת אורז","אצות וואקמה","אצות קומבו","דאשי","אררה","צ'ופסטיקס חבק שחור","שיפודי יקיטורי"];
 
-  const MM_ITEMS = [
-    "אבקת וואסבי","א.ביצים לאיון","אטריות אורז 3 מ","ג'ינג'ר לבן","מגש 03","מגש 07","מחית צ'ילי בשמן",
-    "מחית קארי ירוק","מחית קארי אדום","תמרהינדי","מיסו לבן דאשי","מירין גדול","סויה ירוק גדול","סויה ללג גדול",
-    "סאקה גדול","פנקו","רוטב דגים 4 ל","רוטב פטריות","שומשום שחור","שמן צ'ילי","שמן שומשום","קרם קוקוס גדול",
-    "טמפורה","יוזו גדול","יוזו גדול ללא מלח","סוכר דקלים","צדפות שימורים","בצל מטוגן","אבקת חרדל יפני",
-    "טוגראשי","טום יאם","קנפיו קילו","מגש מסיבה L","מגש מסיבה M","סויה גולדן מאונטן","חטיפי אצות","סויה כהה",
-    "חומץ אורז","אנשובי בשמן גדול","אצות נורי קוריאה","אורז יסמין","שיפודי קשר","אבקת מאצה","ליקר מאצה",
-    "רשת לסיר אורז","כף ווק","ווק","דפי רשת אורז","אצות וואקמה","אצות קומבו","דאשי","אררה","צ'ופסטיקס חבק שחור","שיפודי יקיטורי"
-  ];
+  const save = (k,v)=>localStorage.setItem(k, JSON.stringify(v));
+  const load = (k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(_){return d}};
 
-  function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
-  function load(k,def){ try{return JSON.parse(localStorage.getItem(k)) ?? def}catch{return def} }
-
-  // Load state
-  let suppliers = load(K.suppliers, []);
-  if (!Array.isArray(suppliers) || suppliers.length === 0) {
-    suppliers = DEFAULT_SUPPLIERS.map(s => ({...s}));
-    save(K.suppliers, suppliers);
-  } else {
-    // normalize days
-    suppliers = suppliers.map(s => ({...s, day: (s.day ?? "all")}));
-    save(K.suppliers, suppliers);
-  }
-
+  let suppliers = load(K.suppliers, DEFAULT_SUPPLIERS);
   let items = load(K.items, {});
-  if (!items || typeof items !== "object") items = {};
-  // ensure items for East West
-  const mmPhone = suppliers.find(s => s.name === "מזרח מערב")?.phone || "9725044320036";
-  if (!Array.isArray(items[mmPhone]) || items[mmPhone].length === 0) {
-    items[mmPhone] = MM_ITEMS.map(n => ({ name:n, unit:"", price:0 }));
-  }
-  // ensure items object keys exist for all suppliers
-  suppliers.forEach(s => { if (!Array.isArray(items[s.phone])) items[s.phone]=[]; });
+  if (!Array.isArray(items[suppliers[0].phone])) items[suppliers[0].phone] = MM_ITEMS.map(n=>({name:n,unit:"",price:0}));
+  suppliers.forEach(s=>{ if(!Array.isArray(items[s.phone])) items[s.phone]=items[s.phone]||[]; });
   save(K.items, items);
 
+  let active = load(K.active, suppliers[0].phone);
+  if(!suppliers.find(s=>s.phone===active)){ active=suppliers[0].phone; save(K.active, active); }
   let orders = load(K.orders, []);
   let draft = load(K.draft, {});
   let notes = load(K.notes, "");
 
-  let activeSupplier = load(K.activeSupplier, suppliers[0]?.phone || mmPhone);
-  if (!suppliers.some(s => s.phone === activeSupplier)) {
-    activeSupplier = suppliers[0]?.phone || mmPhone;
-    save(K.activeSupplier, activeSupplier);
-  }
+  const $ = (sel)=>document.querySelector(sel);
+  const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
 
-  // Refs
-  const headerDate = document.getElementById("headerDate");
-  const homeCards = document.getElementById("homeCards");
-  const ordersGrid = document.getElementById("ordersGrid");
-  const activeSupplierSwitch = document.getElementById("activeSupplierSwitch");
-  const orderNotes = document.getElementById("orderNotes");
-  const preview = document.getElementById("preview");
-  const summaryCount = document.getElementById("summaryCount");
-  const historyList = document.getElementById("historyList");
-  const fromDate = document.getElementById("fromDate");
-  const toDate = document.getElementById("toDate");
-  const analyticsBox = document.getElementById("analyticsBox");
-
-  function show(tabId){
-    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-    const el = document.getElementById(tabId);
-    if (el) el.classList.add("active");
-    document.querySelectorAll(".nav .tab").forEach(t=>t.classList.remove("active"));
-    const btn = document.querySelector(`.nav .tab[data-target='${tabId}']`);
-    if (btn) btn.classList.add("active");
-  }
+  // Date in header
+  const days = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+  const months = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+  const now = new Date();
+  $("#headerDate").textContent = `יום ${days[now.getDay()]} · ${now.getDate()} ב${months[now.getMonth()]} ${now.getFullYear()}`;
 
   // Nav
-  document.querySelectorAll(".nav .tab").forEach(btn=>btn.addEventListener("click",()=>{
-    const target = btn.getAttribute("data-target");
-    show(target);
-    if(target==="view-home") renderHome();
-    if(target==="view-orders") buildOrders();
-    if(target==="view-history") renderHistory();
-    if(target==="view-analytics") renderAnalyticsThisMonth();
-    if(target==="view-settings") renderSettings();
+  $$(".nav .tab").forEach(b=>b.addEventListener("click", ()=>{
+    const id=b.dataset.view;
+    $$(".screen").forEach(s=>s.classList.remove("active"));
+    $("#"+id).classList.add("active");
+    $$(".nav .tab").forEach(t=>t.classList.remove("active"));
+    b.classList.add("active");
+    if(id==="view-home") renderHome();
+    if(id==="view-orders") buildOrders();
+    if(id==="view-history") renderHistory();
+    if(id==="view-settings") renderSettings();
   }));
 
-  // Header date
-  function hebDate(){
-    const now = new Date();
-    const days = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
-    const months = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
-    return `יום ${days[now.getDay()]} · ${now.getDate()} ב${months[now.getMonth()]} ${now.getFullYear()}`;
-  }
-  if (headerDate) headerDate.textContent = hebDate();
-
-  // HOME
-  function suppliersForToday(){
-    const d = new Date().getDay().toString();
-    return suppliers.filter(s => s.day==="all" || s.day===d);
-  }
+  // Home
+  const suppliersForToday = ()=>suppliers.filter(s=>s.day==="all" || s.day===String(new Date().getDay()));
   function renderHome(){
-    if (!homeCards) return;
-    const list = suppliersForToday();
-    homeCards.innerHTML = "";
-    if(!list.length){ homeCards.innerHTML = `<div class="item">אין הזמנות מתוכננות להיום</div>`; return; }
-    list.forEach(s=>{
-      const card = document.createElement("div");
-      card.className = "home-card";
-      card.innerHTML = `<div class="dot"></div><div class="name">${s.name}</div>`;
-      card.addEventListener("click", ()=>{
-        activeSupplier = s.phone;
-        save(K.activeSupplier, activeSupplier);
-        show("view-orders");
-        buildOrders();
-      });
-      homeCards.appendChild(card);
+    const host=$("#homeCards"); host.innerHTML="";
+    suppliersForToday().forEach(s=>{
+      const c=document.createElement("div"); c.className="home-card";
+      c.innerHTML=`<div class="dot"></div><div class="name">${s.name}</div>`;
+      c.onclick=()=>{ active=s.phone; save(K.active,active); showOrders(); };
+      host.appendChild(c);
     });
   }
+  const showOrders=()=>{ $$(".screen").forEach(s=>s.classList.remove("active")); $("#view-orders").classList.add("active"); $$(".nav .tab").forEach(t=>t.classList.remove("active")); $(`[data-view="view-orders"]`).classList.add("active"); buildOrders(); };
 
-  // ORDERS
-  function renderSupplierSwitch(){
-    if (!activeSupplierSwitch) return;
-    activeSupplierSwitch.innerHTML = "";
-    suppliers.forEach(s=>{
-      const o = document.createElement("option");
-      o.value = s.phone;
-      o.textContent = `${s.name} — ${s.phone}`;
-      if(s.phone===activeSupplier) o.selected = true;
-      activeSupplierSwitch.appendChild(o);
-    });
-    activeSupplierSwitch.onchange = ()=>{
-      activeSupplier = activeSupplierSwitch.value;
-      save(K.activeSupplier, activeSupplier);
-      buildOrders();
-    };
-  }
-  function lastOrderMap(phone){
-    const o = orders.find(x=>x.supplier===phone);
-    return o ? o.map : {};
-  }
+  // Orders
   function buildOrders(){
-    renderSupplierSwitch();
-    if (!ordersGrid) return;
-    const list = items[activeSupplier] || [];
-    const prev = lastOrderMap(activeSupplier);
-    ordersGrid.innerHTML = "";
+    const sw=$("#supplierSwitch"); sw.innerHTML="";
+    suppliers.forEach(s=>{ const o=document.createElement("option"); o.value=s.phone; o.textContent=`${s.name} — ${s.phone}`; if(s.phone===active) o.selected=true; sw.appendChild(o); });
+    sw.onchange=()=>{ active=sw.value; save(K.active, active); buildOrders(); };
+    const list=items[active]||[]; const wrap=$("#ordersGrid"); wrap.innerHTML="";
     list.forEach(it=>{
-      const row = document.createElement("div");
-      row.className = "card";
-      row.innerHTML = `
-        <input class="qty" inputmode="numeric" pattern="[0-9]*" placeholder="" data-name="${it.name}">
-        <div class="name">${it.name}<span class="meta">${it.unit?` (${it.unit})`:''}${it.price?` • ₪${it.price}`:''}</span></div>
-        <div class="prev">${prev[it.name]||""}</div>
-      `;
-      const input = row.querySelector(".qty");
-      input.value = draft[it.name] || "";
-      input.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); focusNextQuantity(e.target);} });
-      input.addEventListener("input", (e)=>{
-        const v=e.target.value.trim();
-        if(v){ draft[it.name]=v } else { delete draft[it.name] }
-        save(K.draft, draft); updatePreview();
-      });
-      ordersGrid.appendChild(row);
+      const row=document.createElement("div"); row.className="card";
+      row.innerHTML=`<input class="qty" data-name="${it.name}" inputmode="numeric" pattern="[0-9]*"><div class="name">${it.name}<span class="meta">${it.unit?` (${it.unit})`:''}${it.price?` • ₪${it.price}`:''}</span></div><div class="prev"></div>`;
+      const inp=row.querySelector(".qty"); inp.value=draft[it.name]||"";
+      inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();focusNext(inp);}});
+      inp.addEventListener("input",e=>{const v=e.target.value.trim(); if(v){draft[it.name]=v}else{delete draft[it.name]} save(K.draft,draft); updatePreview();});
+      wrap.appendChild(row);
     });
-    if (orderNotes) { orderNotes.value = notes || ""; }
+    $("#notes").value=notes||"";
     updatePreview();
   }
-  function focusNextQuantity(el){
-    const inputs=[...document.querySelectorAll(".qty")];
-    const i=inputs.indexOf(el);
-    const next=inputs[i+1]||inputs[0];
-    next.focus(); next.select&&next.select();
-  }
-  function collectMap(){
-    const map={};
-    document.querySelectorAll(".qty").forEach(inp=>{
-      const v=inp.value.trim(); const n=inp.getAttribute("data-name");
-      if(v) map[n]=v;
-    });
-    return map;
-  }
-  function buildWhatsAppText(map){
-    const s=suppliers.find(x=>x.phone===activeSupplier);
-    const date=new Date().toLocaleString('he-IL');
-    const header=`הזמנת סחורה - סושי רום${s?` - ${s.name}`:""}\nתאריך - ${date}\nפירוט הזמנה -`;
-    const body=Object.entries(map).map(([k,v])=>`${k} - ${v}`).join("\n");
-    const foot = notes && notes.trim().length ? `\n\nהערות:\n${notes.trim()}` : "";
-    const end = `\n\nאודה לאישורכם בהודעה חוזרת`;
-    return `${header}\n${body}${foot}${end}`;
-  }
-  function updatePreview(){
-    if (!summaryCount || !preview) return;
-    const map=collectMap();
-    const count=Object.keys(map).length;
-    summaryCount.textContent=`סה״כ פריטים: ${count}`;
-    preview.textContent = count ? buildWhatsAppText(map) : (notes ? `הערות:\n${notes}` : "");
-  }
+  function focusNext(el){ const inputs=$$(".qty"); const i=inputs.indexOf(el); const n=inputs[i+1]||inputs[0]; n.focus(); n.select&&n.select(); }
+  const mapFromInputs=()=>Object.fromEntries($$(".qty").map(i=>[i.dataset.name, i.value.trim()]).filter(([k,v])=>v));
+  const buildText=(m)=>{ const s=suppliers.find(x=>x.phone===active); const dt=new Date().toLocaleString('he-IL'); const head=`הזמנת סחורה - סושי רום${s?` - ${s.name}`:''}\nתאריך - ${dt}\nפירוט הזמנה -`; const body=Object.entries(m).map(([k,v])=>`${k} - ${v}`).join("\n"); const foot=notes?`\n\nהערות:\n${notes.trim()}`:''; return `${head}\n${body}${foot}\n\nאודה לאישורכם בהודעה חוזרת`; };
 
-  const btnSave = document.getElementById("btnSave");
-  const btnCopy = document.getElementById("btnCopy");
-  const btnWhatsApp = document.getElementById("btnWhatsApp");
+  function updatePreview(){ const m=mapFromInputs(); $("#count").textContent=`סה״כ פריטים: ${Object.keys(m).length}`; $("#preview").textContent=Object.keys(m).length?buildText(m):(notes?`הערות:\n${notes}`:''); }
 
-  if (btnSave) btnSave.addEventListener("click", ()=>{
-    const map=collectMap();
-    orders.unshift({ ts: Date.now(), supplier: activeSupplier, map, notes });
-    save(K.orders, orders);
-    draft={}; save(K.draft,draft); buildOrders();
-    toast("ההזמנה נשמרה");
-  });
-  if (btnCopy) btnCopy.addEventListener("click", ()=>{
-    const txt=buildWhatsAppText(collectMap());
-    navigator.clipboard&&navigator.clipboard.writeText(txt);
-    toast("הטקסט הועתק");
-  });
-  if (btnWhatsApp) btnWhatsApp.addEventListener("click", ()=>{
-    const s=suppliers.find(x=>x.phone===activeSupplier);
-    if(!s){ toast("בחר ספק"); return; }
-    const url="https://wa.me/"+s.phone+"?text="+encodeURIComponent(buildWhatsAppText(collectMap()));
-    window.open(url,"_blank");
-  });
-  if (orderNotes) orderNotes.addEventListener("input", ()=>{ notes=orderNotes.value; save(K.notes, notes); updatePreview(); });
+  $("#btnSave").onclick=()=>{ const m=mapFromInputs(); orders.unshift({ts:Date.now(), supplier:active, map:m, notes}); save(K.orders,orders); draft={}; save(K.draft,draft); buildOrders(); toast("ההזמנה נשמרה"); };
+  $("#btnCopy").onclick=()=>{ const m=mapFromInputs(); navigator.clipboard&&navigator.clipboard.writeText(buildText(m)); toast("הטקסט הועתק"); };
+  $("#btnWA").onclick=()=>{ const s=suppliers.find(x=>x.phone===active); if(!s) return toast("בחר ספק"); const url=`https://wa.me/${s.phone}?text=${encodeURIComponent(buildText(mapFromInputs()))}`; window.open(url,"_blank"); };
+  $("#notes").oninput=(e)=>{ notes=e.target.value; save(K.notes,notes); updatePreview(); };
 
-  // HISTORY
+  // History
   function renderHistory(){
-    if (!historyList) return;
-    historyList.innerHTML="";
-    if(!orders.length){ historyList.innerHTML='<div class="item">אין היסטוריה עדיין</div>'; return; }
-    orders.forEach((o,i)=>{
-      const s=suppliers.find(x=>x.phone===o.supplier);
-      const ts=new Date(o.ts).toLocaleString('he-IL');
-      const body=Object.entries(o.map).map(([k,v])=>`${k} - ${v}`).join("\n");
-      const notesBloc=o.notes? `\n\nהערות:\n${o.notes}`:"";
-      const div=document.createElement("div"); div.className="item";
-      div.innerHTML=`<div><b>#${orders.length-i}</b> • ${ts} • ${s? s.name : o.supplier}</div><pre>${body}${notesBloc}</pre>`;
-      historyList.appendChild(div);
+    const host=$("#historyList"); host.innerHTML="";
+    if(!orders.length){ host.innerHTML='<div class="item">אין היסטוריה עדיין</div>'; return; }
+    orders.forEach((o,idx)=>{
+      const s=suppliers.find(x=>x.phone===o.supplier); const ts=new Date(o.ts).toLocaleString('he-IL');
+      const body=Object.entries(o.map).map(([k,v])=>`${k} - ${v}`).join("\\n");
+      const notesBlock=o.notes?`\\n\\nהערות:\\n${o.notes}`:'';
+      const div=document.createElement("div"); div.className='item';
+      div.innerHTML=`<div><b>#${orders.length-idx}</b> • ${ts} • ${s?s.name:o.supplier}</div><pre>${body}${notesBlock}</pre>`;
+      host.appendChild(div);
     });
   }
 
-  // ANALYTICS
-  let chart;
-  function renderAnalyticsRange(startMs,endMs){
-    if (!document.getElementById("chartBar")) return;
-    const dataMap = new Map();
-    orders.filter(o=>o.ts>=startMs && o.ts<=endMs).forEach(o=>{
-      Object.entries(o.map).forEach(([name,qty])=>{
-        const n=parseFloat(String(qty).match(/\d+(?:\.\d+)?/));
-        if(!isNaN(n)) dataMap.set(name,(dataMap.get(name)||0)+n);
-      });
-    });
-    const rows=[...dataMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const ctx=document.getElementById("chartBar").getContext("2d");
-    if(chart) chart.destroy();
-    chart=new Chart(ctx,{type:"bar",data:{labels:rows.map(r=>r[0]),datasets:[{label:"כמות",data:rows.map(r=>r[1])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
-    analyticsBox.innerHTML = "";
-    const host=document.createElement("div"); host.className="item";
-    host.innerHTML = rows.length ? rows.map(r=>`${r[0]} — ${r[1]}`).join("<br>") : "אין נתונים בתאריכים שנבחרו";
-    analyticsBox.appendChild(host);
-  }
-  function renderAnalyticsThisMonth(){
-    const now=new Date(); const start=new Date(now.getFullYear(), now.getMonth(), 1).getTime(); const end=new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999).getTime();
-    renderAnalyticsRange(start,end);
-  }
-
-  // SETTINGS
-  const suppliersList = document.getElementById("suppliersList");
-  const supName = document.getElementById("supName");
-  const supPhone = document.getElementById("supPhone");
-  const supDay = document.getElementById("supDay");
-  const btnAddSupplier = document.getElementById("btnAddSupplier");
-  const itmName = document.getElementById("itmName");
-  const itmUnit = document.getElementById("itmUnit");
-  const itmPrice = document.getElementById("itmPrice");
-  const itmSupplier = document.getElementById("itmSupplier");
-  const btnAddItem = document.getElementById("btnAddItem");
-  const itemsTable = document.getElementById("itemsTable");
-
+  // Settings
   function renderSettings(){
-    if (!suppliersList) return;
-    suppliersList.innerHTML="";
-    suppliers.forEach((s,idx)=>{
-      const row=document.createElement("div"); row.className="item";
-      const dayTxt = s.day==="all" ? "כל הימים" : ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"][parseInt(s.day)];
-      row.innerHTML = `<b>${s.name}</b> — ${s.phone} • יום: ${dayTxt}`;
-      row.addEventListener("click", ()=>{ supName.value=s.name; supPhone.value=s.phone; supDay.value=s.day; });
-      suppliersList.appendChild(row);
-    });
-
-    if (!itmSupplier) return;
-    itmSupplier.innerHTML="";
-    suppliers.forEach(s=>{
-      const o=document.createElement("option");
-      o.value=s.phone; o.textContent=`${s.name} — ${s.phone}`;
-      itmSupplier.appendChild(o);
-    });
-
-    renderItemsTable(itmSupplier.value || suppliers[0]?.phone);
-    itmSupplier.addEventListener("change", ()=>renderItemsTable(itmSupplier.value));
+    const host=$("#suppliersList"); host.innerHTML="";
+    suppliers.forEach(s=>{ const r=document.createElement("div"); r.className="item"; const dayTxt=s.day==="all"?"כל הימים":days[parseInt(s.day)]; r.textContent=`${s.name} — ${s.phone} • יום: ${dayTxt}`; r.onclick=()=>{ $("#supName").value=s.name; $("#supPhone").value=s.phone; $("#supDay").value=s.day; }; host.appendChild(r); });
   }
+  $("#btnAddSup").onclick=()=>{ const name=$("#supName").value.trim(); const phone=$("#supPhone").value.trim(); const day=$("#supDay").value; if(!name||!phone) return toast("שם ומספר חובה"); const i=suppliers.findIndex(x=>x.phone===phone); const rec={name,phone,day}; if(i>=0) suppliers[i]=rec; else suppliers.push(rec); save(K.suppliers,suppliers); renderSettings(); renderHome(); toast(i>=0?"עודכן":"נוסף"); };
 
-  if (btnAddSupplier) btnAddSupplier.addEventListener("click", ()=>{
-    const name=supName.value.trim(); const phone=supPhone.value.trim(); const day=supDay.value||"all";
-    if(!name || !phone){ toast("שם ומספר ספק חובה"); return; }
-    const i=suppliers.findIndex(x=>x.phone===phone);
-    const rec={ name, phone, day };
-    if(i>=0) suppliers[i]=rec; else suppliers.push(rec);
-    save(K.suppliers, suppliers);
-    if(!items[phone]){ items[phone]=[]; save(K.items, items); }
-    renderSettings(); renderHome();
-    toast(i>=0? "ספק עודכן":"ספק נוסף");
-  });
+  function toast(msg){ const t=$("#toast"); $("#toastMsg").textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1200); }
 
-  function renderItemsTable(phone){
-    if (!itemsTable) return;
-    itemsTable.innerHTML="";
-    const list=items[phone]||[];
-    if(!list.length){ itemsTable.innerHTML='<div class="item">אין פריטים לספק זה</div>'; return; }
-    const host=document.createElement("div"); host.className="table";
-    const t=document.createElement("table");
-    t.innerHTML="<thead><tr><th>פריט</th><th>יח׳</th><th>מחיר</th></tr></thead>";
-    const tb=document.createElement("tbody");
-    list.forEach(it=>{
-      const tr=document.createElement("tr"); tr.innerHTML=`<td>${it.name}</td><td>${it.unit||""}</td><td>${it.price||0}</td>`;
-      tr.addEventListener("click", ()=>{ itmName.value=it.name; itmUnit.value=it.unit||""; itmPrice.value=it.price||0; });
-      tb.appendChild(tr);
-    });
-    t.appendChild(tb); host.appendChild(t); itemsTable.appendChild(host);
-  }
-
-  function toast(msg){
-    const t=document.getElementById("toast"), m=document.getElementById("toastMsg");
-    if (!t || !m) return;
-    m.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1500);
-  }
-
-  // INIT
-  function init(){
-    renderHome();
-    buildOrders();
-  }
-  init();
-
+  // init
+  renderHome(); buildOrders();
 })();
