@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OrderRoom</title>
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="description" content="OrderRoom — דף בית מניע לפעולה לספקים ומוצרים" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">דלג לתוכן</a>
+
+    <header class="app-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">OR</div>
+          <div class="brand-text">
+            <strong>OrderRoom</strong>
+            <small>נהל ספקים ומוצרים בפשטות</small>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="btn btn-ghost" data-scroll="#actions">פעולות</button>
+          <button class="btn btn-ghost" data-scroll="#suppliers">ספקים</button>
+          <button class="btn btn-ghost" data-scroll="#products">מוצרים</button>
+          <button class="btn btn-primary" id="cta-header">התחל עכשיו</button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="container hero-inner">
+          <div class="hero-text">
+            <h1>ברוך הבא ל־OrderRoom</h1>
+            <p>כל מה שצריך כדי להזין ספקים ומוצרים בצורה מהירה ואינטואיטיבית בעיצוב מודרני ונקי.</p>
+            <div class="hero-ctas">
+              <button class="btn btn-primary btn-lg" id="cta-start">הוסף ספק</button>
+              <button class="btn btn-outline btn-lg" data-scroll="#products">צפה במוצרים</button>
+            </div>
+            <ul class="hero-points">
+              <li>כפתורים עגולים עם אנימציות עדינות</li>
+              <li>התאמה מלאה לנייד ולדסקטופ</li>
+              <li>שומר נתונים מקומיים ללא שרת</li>
+            </ul>
+          </div>
+          <div class="hero-card glass">
+            <div class="stat">
+              <span class="stat-label">ספקים</span>
+              <span class="stat-value" id="stat-suppliers">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">מוצרים</span>
+              <span class="stat-value" id="stat-products">0</span>
+            </div>
+            <div class="divider"></div>
+            <button class="btn btn-success btn-block" id="quick-add-demo">הוספת דמו</button>
+            <small class="muted">לחיצה אחת כדי לראות איך זה עובד</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <section id="actions" class="section">
+        <div class="container">
+          <h2 class="section-title">פעולות מהירות</h2>
+
+          <div class="grid cards-3">
+            <article class="card">
+              <h3>הוספת ספק</h3>
+              <p>צור ספק חדש עם פריטים קבועים לשימוש חוזר.</p>
+              <button class="btn btn-primary" id="add-supplier">הוסף ספק</button>
+            </article>
+
+            <article class="card">
+              <h3>הוספת מוצר</h3>
+              <p>הוסף מוצר חדש וקשר אותו לספק.</p>
+              <button class="btn btn-primary" id="add-product">הוסף מוצר</button>
+            </article>
+
+            <article class="card">
+              <h3>יצוא להזמנה</h3>
+              <p>צור קובץ JSON/CSV להזמנה מסודרת מול הספקים.</p>
+              <div class="row gap">
+                <button class="btn btn-outline" id="export-json">ייצוא JSON</button>
+                <button class="btn btn-outline" id="export-csv">ייצוא CSV</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Suppliers -->
+      <section id="suppliers" class="section alt">
+        <div class="container">
+          <div class="section-head">
+            <h2 class="section-title">ספקים</h2>
+            <div class="row gap">
+              <input class="input" id="supplier-search" placeholder="חפש ספק..." />
+              <button class="btn btn-ghost" id="clear-suppliers">נקה</button>
+            </div>
+          </div>
+          <div id="supplier-list" class="grid cards-3 empty-center">
+            <p class="muted">אין ספקים עדיין. לחץ על הוסף ספק כדי להתחיל.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products -->
+      <section id="products" class="section">
+        <div class="container">
+          <div class="section-head">
+            <h2 class="section-title">מוצרים</h2>
+            <div class="row gap">
+              <input class="input" id="product-search" placeholder="חפש מוצר..." />
+              <button class="btn btn-ghost" id="clear-products">נקה</button>
+            </div>
+          </div>
+          <div id="product-list" class="grid cards-3 empty-center">
+            <p class="muted">אין מוצרים עדיין. הוסף מוצר חדש או הוסף דמו.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="container">
+        <p>© <span id="year"></span> OrderRoom — גרסת דף הבית</p>
+      </div>
+    </footer>
+
+    <script defer src="app.js"></script>
+  </body>
+</html>
