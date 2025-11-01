@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
   <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.1.3.0.css" />
+  <link rel="stylesheet" href="style.1.3.1.css" />
 </head>
 <body>
   <header class="topbar">
@@ -41,14 +41,11 @@
     <!-- Orders -->
     <section id="view-orders" class="screen">
       <div class="toolbar">
-        <!-- Supplier picker button -->
-        <div class="picker">
-          <button id="supplierBtn" class="btn picker-btn">
-            <span id="supplierBtnLabel">בחר ספק</span>
-            <svg viewBox="0 0 24 24" class="chev"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          </button>
-          <div id="supplierMenu" class="picker-menu"></div>
-        </div>
+        <!-- Supplier picker button -> opens modal -->
+        <button id="supplierBtn" class="btn picker-btn">
+          <span id="supplierBtnLabel">בחר ספק</span>
+          <svg viewBox="0 0 24 24" class="chev"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </button>
 
         <!-- Branch segmented toggle -->
         <div id="branchWrap" class="seg-wrap"></div>
@@ -59,7 +56,7 @@
         <button class="btn" id="btnSave">שמור טיוטה</button>
       </div>
 
-      <div class="hint">שדות ריקים לא יופיעו בהודעה. Enter עובר לשדה הבא.</div>
+      <div class="hint hint-space">שדות ריקים לא יופיעו בהודעה. Enter עובר לשדה הבא.</div>
       <div id="ordersGrid" class="grid"></div>
 
       <div class="panel notes">
@@ -178,7 +175,19 @@
     </div>
   </div>
 
+  <!-- Supplier modal -->
+  <div id="supplierModal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h3>בחר ספק</h3>
+      <div id="supplierGrid" class="send-grid"></div>
+      <div class="row end mt">
+        <button class="btn" id="supCancel">סגור</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
-  <script src="app.1.3.0.js"></script>
+  <script src="app.1.3.1.js"></script>
 </body>
 </html>
