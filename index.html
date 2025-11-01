@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Order Room – מערכת ניהול הזמנות והספקים החכמה של סושירום</title>
   <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.1.2.0.css" />
+  <link rel="stylesheet" href="style.1.3.0.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <img src="logo.png" alt="SUSHI ROOM" class="logo-img" />
+      <img src="logo_black.png" alt="Sushi Room" class="logo-img" />
       <div class="brand-text">
         <div class="title">Order Room</div>
         <div class="sub">מערכת ניהול הזמנות והספקים החכמה של סושירום</div>
@@ -41,15 +41,22 @@
     <!-- Orders -->
     <section id="view-orders" class="screen">
       <div class="toolbar">
-        <label>ספק:</label>
-        <select id="supplierSwitch"></select>
+        <!-- Supplier picker button -->
+        <div class="picker">
+          <button id="supplierBtn" class="btn picker-btn">
+            <span id="supplierBtnLabel">בחר ספק</span>
+            <svg viewBox="0 0 24 24" class="chev"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <div id="supplierMenu" class="picker-menu"></div>
+        </div>
 
-        <div id="branchWrap" class="branch-wrap"></div>
+        <!-- Branch segmented toggle -->
+        <div id="branchWrap" class="seg-wrap"></div>
 
         <span class="flex"></span>
-        <button class="btn primary" id="btnSave">שמור הזמנה</button>
-        <button class="btn" id="btnWA">שלח בוואטסאפ</button>
-        <button class="btn" id="btnCopy">העתק נוסח</button>
+        <button class="btn primary" id="btnSend">שלח הזמנה</button>
+        <button class="btn" id="btnCopy">העתק הזמנה</button>
+        <button class="btn" id="btnSave">שמור טיוטה</button>
       </div>
 
       <div class="hint">שדות ריקים לא יופיעו בהודעה. Enter עובר לשדה הבא.</div>
@@ -90,6 +97,7 @@
             <div class="row">
               <input id="supName" class="text grow" placeholder="שם ספק" />
               <input id="supPhone" class="text" placeholder="מס׳ וואטסאפ (972...)" />
+              <input id="supEmail" class="text" placeholder="אימייל (אופציונלי)" />
             </div>
 
             <div class="row">
@@ -107,8 +115,15 @@
               <div class="group">
                 <label class="group-title">נק' אספקה</label>
                 <div class="branch-select">
-                  <label class="chk"><input type="checkbox" id="brHills" /> הילס – אריק איינשטיין 3, הרצליה</label>
-                  <label class="chk"><input type="checkbox" id="brNordau" /> נורדאו – נורדאו 4, הרצליה</label>
+                  <label class="chk"><input type="checkbox" id="brHills" /> הילס</label>
+                  <label class="chk"><input type="checkbox" id="brNordau" /> נורדאו</label>
+                </div>
+              </div>
+              <div class="group">
+                <label class="group-title">ערוצי שליחה</label>
+                <div class="branch-select">
+                  <label class="chk"><input type="checkbox" id="chWA" checked/> וואטסאפ (מהטלפון)</label>
+                  <label class="chk"><input type="checkbox" id="chEmail" /> אימייל</label>
                 </div>
               </div>
             </div>
@@ -121,8 +136,9 @@
         </div>
 
         <div class="card-settings">
-          <h3>מידע</h3>
-          <div class="muted">בחר ספק מרשימת הספקים כדי לערוך. ניתן לקבוע מספר ימי הזמנה בשבוע, להגדיר לכל יום הזמנה את יום האספקה, ולבחור לאילו סניפים הספק מספק.</div>
+          <h3>עריכת פריטים (לפי ספק)</h3>
+          <div class="muted">בחר ספק מרשימת הספקים. ניתן לשנות שם, יחידה, מחיר, ולסדר את סדר ההצגה.</div>
+          <div id="itemsEditor" class="items-editor"></div>
         </div>
       </div>
     </section>
@@ -150,7 +166,19 @@
     </div>
   </nav>
 
+  <!-- Send modal -->
+  <div id="sendModal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h3>שליחת הזמנה</h3>
+      <div id="sendBtns" class="send-grid"></div>
+      <div class="row end mt">
+        <button class="btn" id="sendCancel">סגור</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"><div class="box" id="toastMsg"></div></div>
-  <script src="app.1.2.0.js"></script>
+  <script src="app.1.3.0.js"></script>
 </body>
 </html>
