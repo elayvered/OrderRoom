@@ -4,14 +4,64 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Order Room</title>
-  <link rel="icon" href="assets/icons/home.svg">
-  <link rel="stylesheet" href="styles.css?v=1.4.1">
-  <script src="app.js?v=1.4.1" defer></script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M3 10.5 12 3l9 7.5'/%3E%3Cpath d='M9 21V9h6v12'/%3E%3C/svg%3E">
+  <style>
+:root{
+  --bg:#f6f7fb; --card:#ffffff; --text:#0e1320; --muted:#7a8599;
+  --primary:#0e1736; --accent:#00b37e; --danger:#ef4444;
+  --shadow: 0 10px 30px rgba(0,0,0,.08); --radius:22px;
+}
+*{box-sizing:border-box} html,body{height:100%}
+body.or-shell{margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  padding-bottom:96px}
+.or-header{display:flex;align-items:center;gap:12px;padding:16px 18px;
+  position:sticky;top:0;z-index:3;background:linear-gradient(180deg,#fff,rgba(255,255,255,.85));
+  backdrop-filter: blur(6px);border-bottom:1px solid #e9edf3}
+.or-header .logo{height:28px}
+.or-header .title{font-weight:700}
+.or-main{padding:18px;max-width:980px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+.h-xl{font-size:24px;margin:0 0 6px}.h-lg{font-size:18px;margin:8px 0}.muted{color:var(--muted)}
+.section{margin-top:24px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.card,.supplier-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.supplier-card{cursor:pointer;transition:.2s transform}.supplier-card:hover{transform:translateY(-2px)}
+.supplier-name{font-weight:700;margin-bottom:4px}.supplier-meta{color:var(--muted);font-size:12px}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.btn{border:none;border-radius:14px;padding:12px 16px;cursor:pointer;background:#e9edf3}
+.btn.primary{background:var(--primary);color:#fff}.btn.success{background:var(--accent);color:#fff}
+.btn.danger{background:var(--danger);color:#fff}.btn.ghost{background:transparent;border:1px solid #dde3ee;color:var(--text)}
+.btn:active{transform:translateY(1px)}
+.input,textarea{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #e1e6f0;background:#fff}
+textarea{min-height:88px;resize:vertical}
+.items-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.item-row{display:grid;grid-template-columns:1fr 120px;gap:10px;align-items:center;background:#fff;border-radius:16px;padding:10px 12px;box-shadow:var(--shadow)}
+.item-title{font-weight:600}
+.qty{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.qty input{width:80px;text-align:center;padding:10px 8px;border-radius:12px;border:1px solid #e1e6f0}
+.qty .unit{color:var(--muted);font-size:12px}
+.notes-box{margin-top:12px}.order-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}.hint{margin-top:6px}
+.tabbar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(180deg,#0e1222,#0a0f1d);border-radius:28px;padding:10px;display:flex;gap:12px;z-index:5;box-shadow: 0 20px 50px rgba(15,20,35,.35)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;color:#cfd6e6;background:transparent;border:none;padding:10px 14px;border-radius:18px;cursor:pointer;min-width:80px}
+.tab.active{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.tab .ico{height:20px;filter:invert(1) opacity(.85)}
+.list .row,.card .row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px dashed #e7ecf5}
+.card .row:last-child{border:none}
+.segmented{display:inline-flex;background:#eef3fb;padding:4px;border-radius:14px;gap:4px;margin:6px 0 12px}
+.segmented button{border:none;padding:8px 10px;border-radius:10px;background:transparent;cursor:pointer}
+.segmented button.active{background:#fff;box-shadow:var(--shadow)}
+@media (min-width:1000px){.tabbar{bottom:24px}}
+</style>
 </head>
 <body class="or-shell">
 
   <header class="or-header">
-    <img class="logo" src="assets/logo_black.svg" alt="Sushi Room">
+    <div class="logo" aria-hidden="true"><svg xmlns='http://www.w3.org/2000/svg' width='220' height='44' viewBox='0 0 760 160' fill='none'>
+  <text x='0' y='55' font-family='Arial, Helvetica, sans-serif' font-weight='700' font-size='48' fill='#151518'>SUSHI</text>
+  <text x='0' y='120' font-family='Arial, Helvetica, sans-serif' font-weight='700' font-size='48' fill='#151518'>ROOM</text>
+</svg></div>
     <div class="title">Order Room</div>
   </header>
 
@@ -22,9 +72,7 @@
       <div class="subhead">
         <div id="home-date" class="muted"></div>
       </div>
-
       <div class="cards-grid" id="home-suppliers"></div>
-
       <div class="section">
         <h2 class="h-lg">הזמנות אחרונות</h2>
         <div id="home-recent" class="list"></div>
@@ -37,16 +85,12 @@
         <button class="btn ghost" id="btn-back-home">↩</button>
         <h1 id="orders-title" class="h-xl">הזמנה</h1>
       </div>
-
       <div id="branch-toggle" class="segmented"></div>
-
       <div id="items-list" class="items-list"></div>
-
       <div class="notes-box">
         <label>הערות להזמנה</label>
         <textarea id="order-notes" placeholder="שדות ריקים לא יופיעו בהודעה."></textarea>
       </div>
-
       <div class="order-actions">
         <button id="btn-save" class="btn primary">שמור הזמנה</button>
         <button id="btn-copy" class="btn">העתק הזמנה</button>
@@ -65,10 +109,7 @@
     <section id="view-settings" class="view">
       <h1 class="h-xl">הגדרות</h1>
       <div class="card">
-        <div class="row">
-          <div>מצב עבודה</div>
-          <div class="muted">ללא מסד נתונים, שמירה מקומית בלבד</div>
-        </div>
+        <div class="row"><div>מצב עבודה</div><div class="muted">ללא מסד נתונים, שמירה מקומית בלבד</div></div>
       </div>
     </section>
   </main>
@@ -76,22 +117,205 @@
   <!-- Bottom Tab Bar -->
   <nav class="tabbar">
     <button data-view="home" class="tab active">
-      <img src="assets/icons/home.svg" alt="" class="ico">
+      <span class="ico"><svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 10.5 12 3l9 7.5'/><path d='M9 21V9h6v12'/></svg></span>
       <span>בית</span>
     </button>
     <button data-view="orders" class="tab">
-      <img src="assets/icons/orders.svg" alt="" class="ico">
+      <span class="ico"><svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='3' y='4' width='18' height='14' rx='3'/><path d='M7 8h10M7 12h6'/></svg></span>
       <span>הזמנות</span>
     </button>
     <button data-view="history" class="tab">
-      <img src="assets/icons/history.svg" alt="" class="ico">
+      <span class="ico"><svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 3v5h5'/><path d='M3.5 8.5A9 9 0 1 0 12 3v0'/><path d='M12 7v5l4 2'/></svg></span>
       <span>היסטוריה</span>
     </button>
     <button data-view="settings" class="tab">
-      <img src="assets/icons/settings.svg" alt="" class="ico">
+      <span class="ico"><svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'/><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1 1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 4.2 19.4l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1Z'/></svg></span>
       <span>הגדרות</span>
     </button>
   </nav>
 
+  <script>
+  // Inline JS for Order Room v1.4.2
+  (function(){
+    const $ = (s,el=document)=> el.querySelector(s);
+    const $$ = (s,el=document)=> [...el.querySelectorAll(s)];
+
+    const SUPPLIERS = [
+      { id:'mw', name:'מזרח מערב', phone:'+9725044320036', branches:[{id:'hills',name:'הילס',address:'אריק איינשטיין 3, הרצליה'},{id:'nord',name:'נורדאו',address:'נורדאו 4, הרצליה'}] },
+      { id:'diplomat', name:'דיפלומט', phone:'', branches:[{id:'hills',name:'הילס'},{id:'nord',name:'נורדאו'}] }
+    ];
+    const ITEMS = {
+      mw: ["אבקת וואסבי", "א. ביצים לאיון", "אטריות אורז 3 מ\"מ", "ג'ינג'ר לבן", "מגש 03", "מגש 07", "מחית צ'ילי בשמן", "מחית קארי ירוק", "מחית קארי אדום", "תמרהינדי", "מיסו לבן דאשי", "מירין גדול", "סויה ירוק גדול", "סויה ללג גדול", "סאקה גדול", "פנקו", "רוטב דגים 4 ל", "רוטב פטריות", "שומשום שחור", "שמן צ'ילי", "שמן שומשום", "קרם קוקוס גדול", "טמפורה", "יוזו גדול", "יוזו גדול ללא מלח", "סוכר דקלים", "צדפות שימורים", "בצל מטוגן", "אבקת חרדל יפני", "טוגראשי", "טום יאם", "קנפיו קילו", "מגש מסיבה L", "מגש מסיבה M", "סויה גולדן מאונטן", "חטיפי אצות", "סויה כהה", "חומץ אורז", "אנשובי בשמן גדול", "אצות נורי קוריאה", "אורז יסמין", "שיפודי קשר", "אבקת מאצה", "ליקר מאצה", "רשת לסיר אורז", "כף ווק", "ווק", "דפי רשת אורז", "אצות וואקמה", "אצות קומבו", "דאשי", "אררה", "צ’ופסטיקס חבק שחור", "שיפודי יקיטורי"],
+      diplomat: []
+    };
+
+    const STATE = { currentSupplier:null, selectedBranch:null, items:[] };
+
+    function setView(name){
+      $$('.view').forEach(v=>v.classList.remove('active'));
+      $('#view-'+name).classList.add('active');
+      $$('.tab').forEach(t=> t.classList.toggle('active', t.dataset.view===name));
+      if(name==='home') renderHome();
+      if(name==='history') renderHistory();
+    }
+    function todayStr(){
+      return new Date().toLocaleString('he-IL', { dateStyle:'full', timeStyle:'short' });
+    }
+
+    function renderHome(){
+      $('#home-date').textContent = todayStr();
+      const wrap = $('#home-suppliers'); wrap.innerHTML = '';
+      SUPPLIERS.forEach(s=>{
+        const card = document.createElement('div');
+        card.className = 'supplier-card';
+        card.innerHTML = `<div class="supplier-name">${s.name}</div><div class="supplier-meta">לחץ לפתיחת הזמנה</div>`;
+        card.onclick = ()=> openSupplier(s.id);
+        wrap.appendChild(card);
+      });
+
+      const recent = getOrders().slice(0,10);
+      const list = $('#home-recent'); list.innerHTML='';
+      recent.forEach(o=>{
+        const d = new Date(o.created_at);
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `<div>${d.toLocaleString('he-IL')}</div><div class="muted">${o.supplier_name} • ${o.branch_name||''}</div>`;
+        list.appendChild(row);
+      });
+    }
+
+    function openSupplier(sid){
+      const sup = SUPPLIERS.find(x=>x.id===sid);
+      STATE.currentSupplier = sup;
+      $('#orders-title').textContent = 'הזמנה – ' + sup.name;
+
+      const bt = $('#branch-toggle'); bt.innerHTML = '';
+      if(sup.branches?.length){
+        STATE.selectedBranch = sup.branches[0];
+        const seg = document.createElement('div'); seg.className='segmented';
+        sup.branches.forEach((b,i)=>{
+          const btn = document.createElement('button');
+          btn.textContent = b.name;
+          if(i===0) btn.classList.add('active');
+          btn.onclick = ()=>{ STATE.selectedBranch=b; $$('.segmented button', seg).forEach(x=>x.classList.remove('active')); btn.classList.add('active'); };
+          seg.appendChild(btn);
+        });
+        bt.appendChild(seg);
+      } else { STATE.selectedBranch=null; }
+
+      const names = ITEMS[sup.id] || [];
+      STATE.items = names.map((name, idx)=> ({ id:String(idx+1), name, unit:'', qty:0 }));
+      renderItems();
+      setView('orders');
+
+      const last = getOrders().find(o=> o.supplier_id===sup.id);
+      if(last){
+        const map = new Map(last.items.map(i=> [i.name, i.qty]));
+        $$('#items-list .item-row').forEach(row=>{
+          const n = $('.item-title', row).textContent.trim();
+          if(map.has(n)){
+            const el = $('.qty input', row);
+            el.placeholder = map.get(n);
+            el.classList.add('muted');
+          }
+        });
+      }
+    }
+
+    function renderItems(){
+      const cont = $('#items-list'); cont.innerHTML='';
+      if(!STATE.items.length){ cont.innerHTML = `<div class="muted">אין פריטים לספק זה</div>`; return; }
+      STATE.items.forEach(it=>{
+        const row = document.createElement('div');
+        row.className='item-row'; row.dataset.id = it.id;
+        row.innerHTML = `<div class="item-title">${it.name}</div>
+          <div class="qty"><input type="number" min="0" step="1" inputmode="numeric" placeholder=""><span class="unit">${it.unit||''}</span></div>`;
+        cont.appendChild(row);
+      });
+    }
+
+    function orderText(order){
+      const d = new Date(order.created_at);
+      const lines = [
+        `הזמנת סחורה - סושי רום - ${order.supplier_name}`,
+        `תאריך: ${d.toLocaleString('he-IL')}`,
+        order.branch_name ? `סניף: ${order.branch_name}${order.branch_address?(' – '+order.branch_address):''}` : null,
+        'פירוט הזמנה -',
+        ...order.items.map(p=> `• ${p.name} – ${p.qty}`),
+        order.notes ? '' : null,
+        order.notes || null,
+        '',
+        'אודה לאישורכם בהודעה חוזרת'
+      ].filter(Boolean);
+      return lines.join('\n');
+    }
+
+    function getOrders(){
+      try { return JSON.parse(localStorage.getItem('or_orders')||'[]'); }
+      catch(_){ return []; }
+    }
+    function setOrders(arr){ localStorage.setItem('or_orders', JSON.stringify(arr)); }
+
+    function saveOrder(){
+      const sup = STATE.currentSupplier;
+      if(!sup) return alert('בחר ספק');
+      const picked = [];
+      $$('#items-list .item-row').forEach(row=>{
+        const input = $('.qty input', row);
+        const q = Number(input.value);
+        if(q>0){
+          const name = $('.item-title', row).textContent.trim();
+          picked.push({ name, qty:q });
+        }
+      });
+      if(!picked.length) return alert('לא נבחרו פריטים');
+
+      const order = {
+        id: String(Date.now()),
+        created_at: new Date().toISOString(),
+        supplier_id: sup.id,
+        supplier_name: sup.name,
+        branch_id: STATE.selectedBranch?.id || null,
+        branch_name: STATE.selectedBranch?.name || null,
+        branch_address: STATE.selectedBranch?.address || null,
+        items: picked,
+        notes: $('#order-notes').value || ''
+      };
+      const all = getOrders(); all.unshift(order); setOrders(all);
+
+      const text = orderText(order);
+      $('#btn-copy').onclick = ()=> { navigator.clipboard.writeText(text); alert('הועתק'); };
+      $('#btn-whatsapp').onclick = ()=> {
+        const phone = (sup.phone||'').replace(/[^+\d]/g,'');
+        const link = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+        window.open(link,'_blank');
+      };
+      alert('נשמר בהצלחה');
+    }
+
+    function renderHistory(){
+      const list = $('#history-list'); list.innerHTML='';
+      const arr = getOrders();
+      if(!arr.length){ list.innerHTML = `<div class="muted">אין הזמנות עדיין</div>`; return; }
+      arr.forEach(o=>{
+        const d = new Date(o.created_at);
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `<div>${d.toLocaleString('he-IL')}</div><div class="muted">${o.supplier_name} • ${o.branch_name||''}</div>`;
+        list.appendChild(row);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.body.addEventListener('click', (e)=>{
+        const t = e.target.closest('.tab');
+        if(t) setView(t.dataset.view);
+      });
+      $('#btn-back-home').onclick = ()=> setView('home');
+      $('#btn-save').onclick = saveOrder;
+      setView('home');
+    });
+  })();
+  </script>
 </body>
 </html>
