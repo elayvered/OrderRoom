@@ -1,0 +1,1 @@
+Root-ready build for GitHub Pages (main/(root)). Keep relative paths.

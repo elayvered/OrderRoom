@@ -1,0 +1,24 @@
+[
+  {
+    "id": "eastwest",
+    "name": "מזרח מערב",
+    "branchTargets": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderDays": [
+      "יום א",
+      "יום ד"
+    ]
+  },
+  {
+    "id": "diplomat",
+    "name": "דיפלומט",
+    "branchTargets": [
+      "הילס"
+    ],
+    "orderDays": [
+      "יום ב"
+    ]
+  }
+]
