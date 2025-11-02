@@ -1,4 +1,10 @@
-// Order Room v6.2
+// Order Room v6.2.1 (patch) — drop-in replacement for js/app.js
+// Changes:
+// 1) Bottom tabbar replaced with a single hamburger menu (top-left) with dropdown.
+// 2) Orders screen: Branch + Delivery on one row.
+// 3) Orders footer: only "Save" and "Send"; WhatsApp/Email/Copy appear after "Send" in modal.
+// 4) Preserve local data keys from v6.2.
+
 const DAY=['א','ב','ג','ד','ה','ו','ש'];
 const CFG_KEY='or_cfg_v620', ORD_KEY='or_orders_v620';
 
@@ -10,9 +16,9 @@ let CFG=null, currentSupplierId=null, currentDeliverDow=null, currentBranch=null
 
 function nowLabel(){ const d=new Date(); return 'יום '+DAY[d.getDay()]+' • '+d.toLocaleDateString('he-IL') }
 function supplierById(id){ return CFG.suppliers.find(s=>s.id===id) }
-function suppliersToOrderToday(){ const g=new Date().getDay(); return CFG.suppliers.filter(s=> s.dayPairs.some(p=>p.order===g)) }
-function suppliersArrivingToday(){ const g=new Date().getDay(); return CFG.suppliers.filter(s=> s.dayPairs.some(p=>p.deliver===g)) }
-function setView(v){ $$('.view').forEach(x=>x.classList.remove('active')); $('#view-'+v).classList.add('active'); $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v)); if(v==='home') renderHome(); if(v==='orders') initOrderForm(); if(v==='history') renderHistory(); if(v==='settings') renderSettingsList(); }
+function suppliersToOrderToday(){ const g=new Date().getDay(); return CFG.suppliers.filter(s=> s.dayPairs?.some(p=>p.order===g)) }
+function suppliersArrivingToday(){ const g=new Date().getDay(); return CFG.suppliers.filter(s=> s.dayPairs?.some(p=>p.deliver===g)) }
+function setView(v){ $$('.view').forEach(x=>x.classList.remove('active')); const el=$('#view-'+v); if(el) el.classList.add('active'); $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v)); if(v==='home') renderHome(); if(v==='orders') initOrderForm(); if(v==='history') renderHistory(); if(v==='settings') renderSettingsList(); }
 
 document.addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(t) setView(t.dataset.view); });
 
@@ -25,29 +31,76 @@ async function loadConfig(){
   }catch(e){ CFG = read(CFG_KEY, {suppliers:[]}); }
 }
 
+function injectPatchStyles(){
+  const css = `
+    .tabbar{display:none !important}
+    .or-menu-btn{position:absolute; left:12px; top:10px; z-index:9; border:none; border-radius:12px; padding:10px 12px; background:#101a46; color:#fff; font-weight:800; box-shadow:0 10px 30px rgba(0,0,0,.18)}
+    .or-menu-panel{position:absolute; left:12px; top:54px; background:#fff; border:1px solid #e6ecf5; border-radius:14px; box-shadow:0 16px 40px rgba(15,20,35,.14); display:none; overflow:hidden; min-width:180px; z-index:9}
+    .or-menu-panel .row{padding:10px 12px; border-bottom:1px solid #eef3fb; cursor:pointer}
+    .or-menu-panel .row:last-child{border:none}
+    .or-menu-panel .row:hover{background:#f7f9ff}
+    .or-menu-ico{height:18px; width:18px; background-size:contain; background-repeat:no-repeat; margin-inline-start:8px; filter:contrast(1.4)}
+    .order-footer .badge{display:none !important}
+    #view-orders .card .row[data-merged]{display:flex; justify-content:space-between; align-items:center; gap:10px}
+    #view-orders .merge-box{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  `;
+  const tag = document.createElement('style'); tag.textContent = css; document.head.appendChild(tag);
+}
+
+function mountHamburger(){
+  const header = document.querySelector('.or-header');
+  if(!header || $('#or-menu-btn')) return;
+  const btn = document.createElement('button');
+  btn.id='or-menu-btn'; btn.className='or-menu-btn';
+  btn.innerHTML = `<span style="display:inline-block; width:18px; height:2px; background:#fff; box-shadow:0 6px 0 #fff, 0 -6px 0 #fff; vertical-align:middle"></span> <span style="margin-inline-start:8px">תפריט</span>`;
+  header.appendChild(btn);
+
+  const panel = document.createElement('div');
+  panel.className='or-menu-panel'; panel.id='or-menu-panel';
+  const mk = (view, label, icon)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML = `<span class="or-menu-ico" style="background-image:url('assets/icons/${icon}.svg')"></span> ${label}`;
+    r.onclick=()=>{ panel.style.display='none'; setView(view) };
+    panel.appendChild(r);
+  };
+  mk('home','בית','home'); mk('orders','הזמנות','orders'); mk('history','היסטוריה','history'); mk('settings','הגדרות','settings');
+  header.appendChild(panel);
+
+  btn.onclick = ()=>{
+    panel.style.display = (panel.style.display==='block') ? 'none' : 'block';
+  };
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('#or-menu-panel') && e.target.id!=='or-menu-btn') panel.style.display='none';
+  });
+}
+
 function renderHome(){
   $('#home-date').textContent = nowLabel();
-  const enter=$('#home-to-enter'); enter.innerHTML='';
-  suppliersToOrderToday().forEach(s=>{
-    const r=document.createElement('div'); r.className='row';
-    r.innerHTML = `<div><strong>${s.name}</strong><div class="small">לחץ לפתיחת הזמנה</div></div><button class="btn">פתח</button>`;
-    r.querySelector('.btn').onclick=()=>{ setView('orders'); openOrderFor(s.id); };
-    r.onclick = (e)=>{ if(e.target.tagName!=='BUTTON'){ setView('orders'); openOrderFor(s.id);} };
-    enter.appendChild(r);
-  });
-  if(!enter.children.length) enter.innerHTML='<div class="small">אין ספקים להגשה היום</div>';
+  const enter=$('#home-to-enter'); if(enter){ enter.innerHTML='';
+    suppliersToOrderToday().forEach(s=>{
+      const r=document.createElement('div'); r.className='row';
+      r.innerHTML = `<div><strong>${s.name}</strong><div class="small">לחץ לפתיחת הזמנה</div></div><button class="btn">פתח</button>`;
+      r.querySelector('.btn').onclick=()=>{ setView('orders'); openOrderFor(s.id); };
+      r.onclick = (e)=>{ if(e.target.tagName!=='BUTTON'){ setView('orders'); openOrderFor(s.id);} };
+      enter.appendChild(r);
+    });
+    if(!enter.children.length) enter.innerHTML='<div class="small">אין ספקים להגשה היום</div>';
+  }
 
-  const arr=$('#home-arrivals'); arr.innerHTML='';
-  suppliersArrivingToday().forEach(s=>{
-    const r=document.createElement('div'); r.className='row';
-    r.innerHTML=`<div><strong>${s.name}</strong><div class="small">אספקה צפויה היום</div></div>`;
-    arr.appendChild(r);
-  });
-  if(!arr.children.length) arr.innerHTML='<div class="small">אין אספקות</div>';
+  const arr=$('#home-arrivals'); if(arr){ arr.innerHTML='';
+    suppliersArrivingToday().forEach(s=>{
+      const r=document.createElement('div'); r.className='row';
+      r.innerHTML=`<div><strong>${s.name}</strong><div class="small">אספקה צפויה היום</div></div>`;
+      arr.appendChild(r);
+    });
+    if(!arr.children.length) arr.innerHTML='<div class="small">אין אספקות</div>';
+  }
 
-  const recent=read(ORD_KEY,[]).slice(0,10); const list=$('#home-recent'); list.innerHTML='';
-  recent.forEach(o=>{ const d=new Date(o.created_at); const row=document.createElement('div'); row.className='row'; row.innerHTML=`<div>${d.toLocaleDateString('he-IL')}</div><div class="small">${o.supplier_name} • ${o.branch_name||''}</div>`; list.appendChild(row); });
-  if(!list.children.length) list.innerHTML='<div class="small">אין הזמנות קודמות</div>';
+  const list=$('#home-recent'); if(list){ list.innerHTML='';
+    const recent=read(ORD_KEY,[]).slice(0,10);
+    recent.forEach(o=>{ const d=new Date(o.created_at); const row=document.createElement('div'); row.className='row'; row.innerHTML=`<div>${d.toLocaleDateString('he-IL')}</div><div class="small">${o.supplier_name} • ${o.branch_name||''}</div>`; list.appendChild(row); });
+    if(!list.children.length) list.innerHTML='<div class="small">אין הזמנות קודמות</div>';
+  }
 }
 
 function defaultDeliverDayFor(id){ const g=new Date().getDay(); const s=supplierById(id); const p=s?.dayPairs?.find(p=>p.order===g); return p? p.deliver: g }
@@ -56,13 +109,14 @@ function labelDeliver(dow){ return 'יום '+DAY[dow] }
 function initOrderForm(){
   if(!currentSupplierId && CFG.suppliers[0]) currentSupplierId=CFG.suppliers[0].id;
   openOrderFor(currentSupplierId);
-  $('#btn-change-supplier').onclick=openSupplierPicker;
-  $('#btn-open-delivery').onclick=()=> $('#deliver-modal').style.display='flex';
-  $('#deliver-close').onclick=()=> $('#deliver-modal').style.display='none';
+  const btnChange=$('#btn-change-supplier'); if(btnChange) btnChange.onclick=openSupplierPicker;
+  const btnOpenDel=$('#btn-open-delivery'); if(btnOpenDel) btnOpenDel.onclick=()=> $('#deliver-modal').style.display='flex';
+  const btnDelClose=$('#deliver-close'); if(btnDelClose) btnDelClose.onclick=()=> $('#deliver-modal').style.display='none';
 }
 
 function openSupplierPicker(){
-  const box=$('#supplier-modal'); box.style.display='flex';
+  const box=$('#supplier-modal'); if(!box) return;
+  box.style.display='flex';
   const g=$('#supplier-grid'); g.innerHTML='';
   CFG.suppliers.forEach(s=>{
     const card=document.createElement('div'); card.className='supplier-card';
@@ -75,49 +129,67 @@ function openSupplierPicker(){
 
 function openOrderFor(id){
   const s=supplierById(id); if(!s) return; currentSupplierId=id;
-  $('#orders-supplier-name').textContent=s.name;
+  const nameSpan=$('#orders-supplier-name'); if(nameSpan) nameSpan.textContent=s.name;
 
   // branches
-  const bt=$('#branch-toggle'); bt.innerHTML='';
-  const branches=[]; if(s.branches.hills) branches.push({id:'hills',name:'הילס',address:'אריק איינשטיין 3, הרצליה'}); if(s.branches.nord) branches.push({id:'nord',name:'נורדאו',address:'נורדאו 4, הרצליה'});
-  currentBranch = branches[0]||null;
-  const seg=document.createElement('div'); seg.className='segmented';
-  branches.forEach((b,i)=>{ const btn=document.createElement('button'); btn.textContent=b.name; if(i===0) btn.classList.add('active'); btn.onclick=()=>{ currentBranch=b; $$('#branch-toggle .segmented button').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); showLastQtyHints(); }; seg.appendChild(btn); });
-  bt.appendChild(seg);
+  const bt=$('#branch-toggle'); if(bt){ bt.innerHTML='';
+    const branches=[]; if(s.branches?.hills) branches.push({id:'hills',name:'הילס',address:'אריק איינשטיין 3, הרצליה'}); if(s.branches?.nord) branches.push({id:'nord',name:'נורדאו',address:'נורדאו 4, הרצליה'});
+    currentBranch = branches[0]||null;
+    const seg=document.createElement('div'); seg.className='segmented';
+    branches.forEach((b,i)=>{ const btn=document.createElement('button'); btn.textContent=b.name; if(i===0) btn.classList.add('active'); btn.onclick=()=>{ currentBranch=b; $$('#branch-toggle .segmented button').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); showLastQtyHints(); }; seg.appendChild(btn); });
+    bt.appendChild(seg);
+  }
 
   // delivery default & chips
   currentDeliverDow = defaultDeliverDayFor(id);
-  $('#deliver-label').textContent = labelDeliver(currentDeliverDow);
-  const chips=$('#deliver-chips'); chips.innerHTML='';
-  DAY.forEach((d,i)=>{ const b=document.createElement('button'); b.textContent='יום '+d; if(i===currentDeliverDow) b.classList.add('active'); b.onclick=()=>{ currentDeliverDow=i; $('#deliver-label').textContent=labelDeliver(currentDeliverDow); $('#deliver-modal').style.display='none'; $$('#deliver-chips button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }; chips.appendChild(b) });
+  const dl=$('#deliver-label'); if(dl) dl.textContent = labelDeliver(currentDeliverDow);
+  const chips=$('#deliver-chips'); if(chips){ chips.innerHTML=''; DAY.forEach((d,i)=>{ const b=document.createElement('button'); b.textContent='יום '+d; if(i===currentDeliverDow) b.classList.add('active'); b.onclick=()=>{ currentDeliverDow=i; const dl2=$('#deliver-label'); if(dl2) dl2.textContent=labelDeliver(currentDeliverDow); $('#deliver-modal').style.display='none'; $$('#deliver-chips button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }; chips.appendChild(b) }); }
+
+  // Merge branch + delivery controls into a single row
+  try{
+    const card = $('#view-orders .card');
+    const firstRow = card?.querySelectorAll('.row')?.[0];
+    const secondRow = card?.querySelectorAll('.row')?.[1];
+    if(firstRow && secondRow){
+      firstRow.setAttribute('data-merged','');
+      const mergeBox = document.createElement('div'); mergeBox.className='merge-box';
+      const btNode = $('#branch-toggle'); const delBtn = $('#btn-open-delivery');
+      if(btNode && delBtn){
+        mergeBox.appendChild(btNode);
+        mergeBox.appendChild(delBtn);
+        if(firstRow.children[1]) firstRow.replaceChild(mergeBox, firstRow.children[1]);
+        secondRow.style.display='none';
+      }
+    }
+  }catch(e){ /* ignore */ }
 
   // items list with unit/carton segmented
-  const list=$('#items-list'); list.innerHTML='';
-  (s.items||[]).forEach(it=>{
-    if(it.unitsPerCarton==null) it.unitsPerCarton=1;
-    const row=document.createElement('div'); row.className='item-row'; row.dataset.id=it.id; row.dataset.mode='unit';
-    row.innerHTML = `<div><div class="item-title">${it.name}</div><div class="small" data-last="${it.name}"></div></div>
-      <div class="qty">
-        <div class="segmented seg-mini" data-pack>
-          <button class="active" data-mode="unit"><img alt="" src="assets/icons/unit.svg" style="height:14px;vertical-align:-2px"> יח'</button>
-          <button data-mode="carton"><img alt="" src="assets/icons/box.svg" style="height:14px;vertical-align:-2px"> קרטון</button>
-        </div>
-        <input type="number" inputmode="numeric" min="0" step="1" placeholder="0">
-      </div>`;
-    list.appendChild(row);
-  });
-
-  // toggle pack mode
-  $$('#items-list [data-pack]').forEach(pack=>{
-    const row=pack.closest('.item-row');
-    pack.querySelectorAll('button').forEach(btn=>{
-      btn.onclick=()=>{
-        pack.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        row.dataset.mode = btn.dataset.mode;
-      };
+  const list=$('#items-list'); if(list){ list.innerHTML='';
+    (s.items||[]).forEach(it=>{
+      if(it.unitsPerCarton==null) it.unitsPerCarton=1;
+      const row=document.createElement('div'); row.className='item-row'; row.dataset.id=it.id; row.dataset.mode='unit';
+      row.innerHTML = `<div><div class="item-title">${it.name}</div><div class="small" data-last="${it.name}"></div></div>
+        <div class="qty">
+          <div class="segmented seg-mini" data-pack>
+            <button class="active" data-mode="unit"><img alt="" src="assets/icons/unit.svg" style="height:14px;vertical-align:-2px"> יח'</button>
+            <button data-mode="carton"><img alt="" src="assets/icons/box.svg" style="height:14px;vertical-align:-2px"> קרטון</button>
+          </div>
+          <input type="number" inputmode="numeric" min="0" step="1" placeholder="0">
+        </div>`;
+      list.appendChild(row);
     });
-  });
+
+    $$('#items-list [data-pack]').forEach(pack=>{
+      const row=pack.closest('.item-row');
+      pack.querySelectorAll('button').forEach(btn=>{
+        btn.onclick=()=>{
+          pack.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          row.dataset.mode = btn.dataset.mode;
+        };
+      });
+    });
+  }
 
   function showLastQtyHints(){
     const orders=read(ORD_KEY,[]);
@@ -131,8 +203,8 @@ function openOrderFor(id){
   }
   showLastQtyHints();
 
-  $('#btn-save').onclick=()=> saveOrder(s);
-  $('#btn-send').onclick=()=> sendOrderFlow(s);
+  const saveBtn=$('#btn-save'); if(saveBtn) saveBtn.onclick=()=> saveOrder(s);
+  const sendBtn=$('#btn-send'); if(sendBtn) sendBtn.onclick=()=> sendOrderFlow(s);
 }
 
 function collectPicked(){
@@ -157,7 +229,7 @@ function buildOrder(s){
   return { id:String(Date.now()), created_at:new Date().toISOString(),
     supplier_id:s.id, supplier_name:s.name,
     branch_id:currentBranch?.id||null, branch_name:currentBranch?.name||null, branch_address:currentBranch?.address||null,
-    deliver_dow: currentDeliverDow, items: collectPicked(), notes: $('#order-notes').value||'' };
+    deliver_dow: currentDeliverDow, items: collectPicked(), notes: $('#order-notes')?.value||'' };
 }
 
 function orderText(o){
@@ -201,9 +273,9 @@ function sendOrderFlow(s){
 
 // Settings
 function renderSettingsList(){
-  $('#settings-title').innerHTML='ניהול ספקים <span class="version-badge">v6.2</span>';
-  const body=$('#settings-body'); body.innerHTML='';
-  CFG.suppliers.forEach(s=>{
+  const title=$('#settings-title'); if(title) title.innerHTML='ניהול ספקים <span class="version-badge">v6.2.1</span>';
+  const body=$('#settings-body'); if(!body) return; body.innerHTML='';
+  (CFG.suppliers||[]).forEach(s=>{
     const row=document.createElement('div'); row.className='row';
     row.innerHTML=`<div><strong>${s.name}</strong><div class="small">${s.phone||s.email||''}</div></div>
       <div class="inline">
@@ -224,8 +296,8 @@ function daySelect(val, typ){
 
 function renderSupplierEditor(sid, openItems=false){
   const s = supplierById(sid);
-  $('#settings-title').innerHTML='עריכת ספק – '+s.name+' <span class="version-badge">v6.2</span>';
-  const body=$('#settings-body'); body.innerHTML='';
+  const title=$('#settings-title'); if(title) title.innerHTML='עריכת ספק – '+s.name+' <span class="version-badge">v6.2.1</span>';
+  const body=$('#settings-body'); if(!body) return; body.innerHTML='';
 
   const back=document.createElement('div'); back.className='row';
   back.innerHTML=`<button class="btn ghost" id="btn-back-settings">חזרה לרשימה</button>`;
@@ -311,10 +383,15 @@ function renderSupplierEditor(sid, openItems=false){
 }
 
 function renderHistory(){
-  const list=$('#history-list'); list.innerHTML='';
+  const list=$('#history-list'); if(!list) return; list.innerHTML='';
   read(ORD_KEY,[]).forEach(o=>{ const d=new Date(o.created_at); const r=document.createElement('div'); r.className='row'; r.innerHTML=`<div>${d.toLocaleDateString('he-IL')}</div><div class="small">${o.supplier_name} • ${o.branch_name||''} • יום אספקה: יום ${DAY[o.deliver_dow??d.getDay()]}</div>`; list.appendChild(r); });
   if(!list.children.length) list.innerHTML='<div class="small">אין הזמנות</div>';
 }
 
 // boot
-document.addEventListener('DOMContentLoaded', async ()=>{ await loadConfig(); setView('home'); });
+document.addEventListener('DOMContentLoaded', async ()=>{
+  injectPatchStyles();
+  await loadConfig();
+  setView('home');
+  mountHamburger();
+});
