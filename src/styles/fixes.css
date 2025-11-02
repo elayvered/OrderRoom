@@ -1,0 +1,159 @@
+
+:root{
+  --bottom-nav-height: 84px;
+  --surface: #0f1220;
+  --brand: #2bb673;
+  --brand-700: #1d8e57;
+  --muted-200: #e8ecf2;
+  --ring: #70e1aa;
+}
+
+/* ודאו שהקובץ נטען אחרון כך שיגבר על סגנונות קודמים */
+
+/* תוכן האפליקציה מקבל ריווח לתחתית כדי שהניווט לא יסתיר כפתורים */
+.app-content{
+  padding-bottom: calc(var(--bottom-nav-height) + 16px);
+}
+
+/* ניווט תחתון */
+.bottom-nav{
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--bottom-nav-height);
+  background: var(--surface);
+  color: #fff;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  z-index: 50;
+  box-shadow: 0 -6px 18px rgba(0,0,0,.25);
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.bottom-nav button,
+.bottom-nav a{
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.bottom-nav svg{
+  width: 26px;
+  height: 26px;
+  fill: #fff;
+  stroke: #fff;
+}
+
+/* כותרת ההזמנה: סניף + יום אספקה באותה שורה */
+.order-head{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+@media (max-width: 520px){
+  .order-head{ grid-template-columns: 1fr 1fr; }
+}
+
+/* כפתור יום אספקה */
+.delivery-button{
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  border: 2px solid var(--brand);
+  border-radius: 14px;
+  background: #fff;
+  color: #111;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(0,0,0,.02);
+}
+.delivery-button:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(43,182,115,.18);
+}
+
+/* שורת שמירה ושליחה – צפה מעל הניווט */
+.order-actions{
+  position: sticky;
+  bottom: calc(var(--bottom-nav-height) + 8px);
+  z-index: 45;
+  display: grid;
+  grid-auto-flow: column;
+  gap: 10px;
+  justify-content: start;
+}
+@media (max-width: 520px){
+  .order-actions{ grid-auto-flow: row; }
+}
+.order-actions .primary{
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-weight: 700;
+}
+.order-actions .primary:active{ background: var(--brand-700); }
+.order-actions .secondary{
+  background: #fff;
+  border: 1px solid var(--muted-200);
+  color: #111;
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-weight: 700;
+}
+
+/* מסך עריכת ספק – פריסת דף מלאה עם גלילה פנימית בלבד */
+.sheet{
+  position: relative;
+  height: 100dvh;
+  height: 100vh; /* fallback */
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.sheet__header{
+  padding: 18px 18px 10px 18px;
+  border-bottom: 1px solid var(--muted-200);
+  background: #fff;
+}
+.sheet__body{
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+/* אזור ניהול פריטים – רוחב מלא וללא גלילה לרוחב */
+.items-grid{
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  width: 100%;
+}
+.items-grid > *{
+  min-width: 0;
+}
+
+/* עצירת גלילה כפולה במובייל כאשר פתוח מודאל/דף מלא */
+html.modal-open, body.modal-open{
+  overflow: hidden;
+}
+
+/* למנוע חיתוך של עליון/תחתון במכשירי iOS עם safe-area */
+@supports (padding: max(0px)){
+  .app-content{
+    padding-bottom: max(calc(var(--bottom-nav-height) + 16px), env(safe-area-inset-bottom));
+  }
+  .bottom-nav{
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
