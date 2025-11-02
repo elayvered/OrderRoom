@@ -1,0 +1,22 @@
+*{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
+:root{--bg:#0b1220;--card:#101829;--line:#1f2b44;--text:#e8eefc;--muted:#a7b4d6;--accent:#69d3ff;--accent2:#00c2ff}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Hebrew",sans-serif;-webkit-text-size-adjust:100%}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0d1525;z-index:1000}
+.brand{display:flex;gap:12px;align-items:center}.logo{width:40px;height:40px;object-fit:contain;filter:invert(1)}.ver{opacity:.7}
+.screen{position:relative;z-index:1;padding:16px 16px 150px;max-width:960px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.list{display:grid;gap:8px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.badge{background:#0f2238;color:#a7e7ff;border:1px solid #1e3b56;padding:2px 8px;border-radius:999px;font-size:12px}
+/* bottom dock */
+.dock{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:#0c1426;border:1px solid var(--line);border-radius:20px;padding:10px 12px;z-index:99999;backdrop-filter:saturate(120%) blur(6px);pointer-events:auto}
+.dock-btn{border:1px solid #2a395c;background:#121a2b;color:#fff;border-radius:16px;min-width:82px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:.15s ease-in-out;pointer-events:auto}
+.dock-btn img{width:22px;height:22px;filter:none} /* svg white */
+.dock-btn:hover{transform:translateY(-1px)}
+.dock-btn:active{transform:translateY(0) scale(.98)}
+.dock-btn.active{outline:2px solid var(--accent)}
+.dock-btn:focus-visible{outline:3px solid var(--accent2);outline-offset:2px;border-radius:18px}
+/* utility */
+.mono{font-variant-numeric:tabular-nums}
+@media (max-width:420px){.dock-btn span{font-size:12px}}
