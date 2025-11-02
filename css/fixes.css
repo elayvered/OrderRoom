@@ -1,0 +1,73 @@
+
+:root{
+  --tabbar-h: 84px;
+  --brand: #2bb673;
+  --muted-200: #e8ecf2;
+}
+
+/* אל תיגעו בהיררכיה – הקובץ נטען אחרון ומתקן נקודתית */
+
+.or-main{ padding-bottom: calc(var(--tabbar-h) + 20px) !important; }
+
+/* טאבבר – אייקונים לבנים */
+.tabbar{ position: fixed; left:0; right:0; bottom:0; height: var(--tabbar-h); z-index: 50; }
+.tabbar .ico{ filter: brightness(0) invert(1); }
+.tabbar .tab{ color: #fff; }
+
+/* שורת פעולות הזמנה – תמיד מעל הטאבבר, לא נחתכת */
+.order-footer{
+  position: sticky;
+  bottom: calc(var(--tabbar-h) + 8px);
+  z-index: 45;
+  background: linear-gradient(0deg, rgba(244,246,251,1) 0%, rgba(244,246,251,0) 100%);
+  padding-bottom: 8px;
+  border-radius: 16px;
+}
+
+/* סניף + יום אספקה באותה שורה */
+.row-combo{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+.row-combo .field{ display: grid; gap: 6px; }
+@media (max-width: 540px){
+  .row-combo{ grid-template-columns: 1fr; }
+}
+
+/* מסגרת כפתור יום אספקה */
+.choose-pill{
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 2px solid var(--brand) !important;
+  border-radius: 14px !important;
+  background: #fff;
+  font-weight: 700;
+}
+.choose-pill:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(43,182,115,.18);
+}
+
+/* מודאלים/מסכי עריכה (למשל עריכת ספק): מימדים נכונים שלא נחתכים */
+.modal-back{ padding: 16px; }
+.modal{
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  width: min(960px, 96vw);
+}
+.supplier-grid{ width: 100%; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.items-list{ width: 100%; }
+
+/* מניעת גלילה כפולה במובייל כשמודאל פתוח */
+html.modal-open, body.modal-open{ overflow: hidden; }
+
+/* תמיכה ב-safe-area במכשירי iPhone */
+@supports(padding: max(0px)){
+  .or-main{ padding-bottom: max(calc(var(--tabbar-h) + 20px), env(safe-area-inset-bottom)); }
+  .tabbar{ padding-bottom: env(safe-area-inset-bottom); }
+}
