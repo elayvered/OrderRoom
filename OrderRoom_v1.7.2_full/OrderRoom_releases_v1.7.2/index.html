@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Order Room v1.7.2</title>
+  <link rel="icon" href="./assets/logo_black.svg">
+  <link rel="stylesheet" href="./styles.css?v=1.7.2">
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="hstack">
+      <img class="logo" src="./assets/logo_black.svg" alt="Sushi Room">
+      <div class="title">Order Room</div>
+      <span class="badge">v1.7.2</span>
+    </div>
+  </div>
+  <div class="content" id="view">טוען…</div>
+  <div class="actions-bar" id="actionsBar" style="display:none;">
+    <div class="actions">
+      <button class="icon-btn" id="btnCopy">העתק</button>
+      <button class="icon-btn" id="btnMail">מייל</button>
+      <button class="icon-btn" id="btnWa">וואטסאפ</button>
+    </div>
+  </div>
+  <nav class="tabbar">
+    <a class="tab" data-route="home"><img src="./assets/icons/home.svg"><span>בית</span></a>
+    <a class="tab" data-route="orders"><img src="./assets/icons/orders.svg"><span>הזמנות</span></a>
+    <a class="tab" data-route="history"><img src="./assets/icons/history.svg"><span>היסטוריה</span></a>
+    <a class="tab" data-route="settings"><img src="./assets/icons/settings.svg"><span>הגדרות</span></a>
+  </nav>
+</div>
+<div class="modal-back" id="modalBack"><div class="modal"><h3 id="modalTitle">בחר</h3><div id="modalBody" class="select-list"></div></div></div>
+<script>
+window.OR_CONFIG=window.OR_CONFIG||{};
+OR_CONFIG.VERSION="1.7.2";
+OR_CONFIG.SEED_BASE_URL=OR_CONFIG.SEED_BASE_URL||"../orderroom-suppliers-seed"; // one level up
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app.js?v=1.7.2"></script>
+</body></html>

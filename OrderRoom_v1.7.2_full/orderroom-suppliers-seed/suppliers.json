@@ -1,0 +1,42 @@
+[
+  {
+    "id": "eastwest",
+    "name": "מזרח מערב",
+    "phone": "+9725044320036",
+    "email": "",
+    "branches": [
+      "hills",
+      "nordau"
+    ],
+    "order_days": [
+      "Sun",
+      "Tue",
+      "Thu"
+    ],
+    "delivery_by_order_day": {
+      "Sun": "Mon",
+      "Tue": "Wed",
+      "Thu": "Fri"
+    },
+    "active": true
+  },
+  {
+    "id": "diplomat",
+    "name": "דיפלומט",
+    "phone": "",
+    "email": "",
+    "branches": [
+      "hills",
+      "nordau"
+    ],
+    "order_days": [
+      "Mon",
+      "Wed"
+    ],
+    "delivery_by_order_day": {
+      "Mon": "Tue",
+      "Wed": "Thu"
+    },
+    "active": true
+  }
+]
