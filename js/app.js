@@ -1,9 +1,6 @@
-// Order Room v6.2.1 (patch) — drop-in replacement for js/app.js
-// Changes:
-// 1) Bottom tabbar replaced with a single hamburger menu (top-left) with dropdown.
-// 2) Orders screen: Branch + Delivery on one row.
-// 3) Orders footer: only "Save" and "Send"; WhatsApp/Email/Copy appear after "Send" in modal.
-// 4) Preserve local data keys from v6.2.
+// Order Room v6.2.1-hotfix — drop-in replacement for js/app.js
+// Fix: robust merge of Branch + Delivery into the SAME row on Orders view without breaking layout.
+// Also: keep the single top-left menu and 'Save/Send' footer behavior from 6.2.1.
 
 const DAY=['א','ב','ג','ד','ה','ו','ש'];
 const CFG_KEY='or_cfg_v620', ORD_KEY='or_orders_v620';
@@ -41,8 +38,12 @@ function injectPatchStyles(){
     .or-menu-panel .row:hover{background:#f7f9ff}
     .or-menu-ico{height:18px; width:18px; background-size:contain; background-repeat:no-repeat; margin-inline-start:8px; filter:contrast(1.4)}
     .order-footer .badge{display:none !important}
-    #view-orders .card .row[data-merged]{display:flex; justify-content:space-between; align-items:center; gap:10px}
-    #view-orders .merge-box{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    #view-orders .merged-row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+    #view-orders .merged-row .merge-box{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    @media (max-width:480px){
+      #view-orders .merged-row{gap:8px}
+      #view-orders .merged-row .merge-box{gap:8px}
+    }
   `;
   const tag = document.createElement('style'); tag.textContent = css; document.head.appendChild(tag);
 }
@@ -127,6 +128,31 @@ function openSupplierPicker(){
   $('#supplier-close').onclick=()=> box.style.display='none';
 }
 
+function createMergedRow(){
+  const card = $('#view-orders .card');
+  if(!card) return;
+  let merged = card.querySelector('.merged-row');
+  if(!merged){
+    merged = document.createElement('div');
+    merged.className='row merged-row';
+    const title=document.createElement('div');
+    title.textContent='סניף + יום אספקה';
+    const content=document.createElement('div');
+    content.className='merge-box';
+    merged.appendChild(title); merged.appendChild(content);
+    card.insertBefore(merged, card.firstElementChild);
+  }
+  const content = merged.querySelector('.merge-box');
+  const branchToggle = $('#branch-toggle');
+  const deliverBtn = $('#btn-open-delivery');
+  if(branchToggle && branchToggle.parentNode!==content) content.appendChild(branchToggle);
+  if(deliverBtn && deliverBtn.parentNode!==content) content.appendChild(deliverBtn);
+  const branchRow = branchToggle ? branchToggle.closest('.row') : null;
+  const deliverRow = deliverBtn ? deliverBtn.closest('.row') : null;
+  if(branchRow && branchRow!==merged) branchRow.style.display='none';
+  if(deliverRow && deliverRow!==merged) deliverRow.style.display='none';
+}
+
 function openOrderFor(id){
   const s=supplierById(id); if(!s) return; currentSupplierId=id;
   const nameSpan=$('#orders-supplier-name'); if(nameSpan) nameSpan.textContent=s.name;
@@ -145,23 +171,7 @@ function openOrderFor(id){
   const dl=$('#deliver-label'); if(dl) dl.textContent = labelDeliver(currentDeliverDow);
   const chips=$('#deliver-chips'); if(chips){ chips.innerHTML=''; DAY.forEach((d,i)=>{ const b=document.createElement('button'); b.textContent='יום '+d; if(i===currentDeliverDow) b.classList.add('active'); b.onclick=()=>{ currentDeliverDow=i; const dl2=$('#deliver-label'); if(dl2) dl2.textContent=labelDeliver(currentDeliverDow); $('#deliver-modal').style.display='none'; $$('#deliver-chips button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }; chips.appendChild(b) }); }
 
-  // Merge branch + delivery controls into a single row
-  try{
-    const card = $('#view-orders .card');
-    const firstRow = card?.querySelectorAll('.row')?.[0];
-    const secondRow = card?.querySelectorAll('.row')?.[1];
-    if(firstRow && secondRow){
-      firstRow.setAttribute('data-merged','');
-      const mergeBox = document.createElement('div'); mergeBox.className='merge-box';
-      const btNode = $('#branch-toggle'); const delBtn = $('#btn-open-delivery');
-      if(btNode && delBtn){
-        mergeBox.appendChild(btNode);
-        mergeBox.appendChild(delBtn);
-        if(firstRow.children[1]) firstRow.replaceChild(mergeBox, firstRow.children[1]);
-        secondRow.style.display='none';
-      }
-    }
-  }catch(e){ /* ignore */ }
+  createMergedRow();
 
   // items list with unit/carton segmented
   const list=$('#items-list'); if(list){ list.innerHTML='';
@@ -273,7 +283,7 @@ function sendOrderFlow(s){
 
 // Settings
 function renderSettingsList(){
-  const title=$('#settings-title'); if(title) title.innerHTML='ניהול ספקים <span class="version-badge">v6.2.1</span>';
+  const title=$('#settings-title'); if(title) title.innerHTML='ניהול ספקים <span class="version-badge">v6.2.1-hotfix</span>';
   const body=$('#settings-body'); if(!body) return; body.innerHTML='';
   (CFG.suppliers||[]).forEach(s=>{
     const row=document.createElement('div'); row.className='row';
@@ -296,7 +306,7 @@ function daySelect(val, typ){
 
 function renderSupplierEditor(sid, openItems=false){
   const s = supplierById(sid);
-  const title=$('#settings-title'); if(title) title.innerHTML='עריכת ספק – '+s.name+' <span class="version-badge">v6.2.1</span>';
+  const title=$('#settings-title'); if(title) title.innerHTML='עריכת ספק – '+s.name+' <span class="version-badge">v6.2.1-hotfix</span>';
   const body=$('#settings-body'); if(!body) return; body.innerHTML='';
 
   const back=document.createElement('div'); back.className='row';
