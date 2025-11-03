@@ -1,5 +1,8 @@
-// Order Room v6.2.2 — drop-in replacement for js/app.js
-// Fix pack per user's request... (see details in the chat above)
+// Order Room v6.2.3 — patch for orders screen layout & menu
+// - Merge branch + delivery in a single row and hide all duplicates
+// - Fixed footer with safe-area + proper bottom padding
+// - Top spacing so content doesn't get cut by header
+// - Title guard to avoid doubled 'הזמנה –'
 
 const DAY=['א','ב','ג','ד','ה','ו','ש'];
 const CFG_KEY='or_cfg_v620', ORD_KEY='or_orders_v620';
@@ -14,7 +17,7 @@ function nowLabel(){ const d=new Date(); return 'יום '+DAY[d.getDay()]+' • 
 function supplierById(id){ return (CFG.suppliers||[]).find(s=>s.id===id) }
 function suppliersToOrderToday(){ const g=new Date().getDay(); return (CFG.suppliers||[]).filter(s=> s.dayPairs?.some(p=>p.order===g)) }
 function suppliersArrivingToday(){ const g=new Date().getDay(); return (CFG.suppliers||[]).filter(s=> s.dayPairs?.some(p=>p.deliver===g)) }
-function setView(v){ $$('.view').forEach(x=>x.classList.remove('active')); const el=$('#view-'+v); if(el) el.classList.add('active'); $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v)); if(v==='home') renderHome(); if(v==='orders') initOrderForm(); if(v==='history') renderHistory(); if(v==='settings') renderSettingsList(); }
+function setView(v){ $$('.view').forEach(x=>x.classList.remove('active')); const el=$('#view-'+v); if(el) el.classList.add('active'); $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v)); if(v==='home') renderHome(); if(v==='orders') initOrderForm(); if(v==='history') renderHistory(); if(v==='settings') renderSettingsList?.(); }
 
 document.addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(t) setView(t.dataset.view); });
 
@@ -29,32 +32,39 @@ async function loadConfig(){
 
 function injectPatchStyles(){
   const css = `
-    #view-orders .order-footer{position:sticky; bottom:0; background:#fff; padding:12px; border-top:1px solid #eceff6; box-shadow:0 -8px 26px rgba(15,20,35,.06); z-index:8}
-    main{padding-bottom:84px}
+    /* header top spacing so first card won't be cut */
+    main{padding-top:14px; padding-bottom:120px}
+    /* fixed footer with safe-area */
+    #view-orders .order-footer{position:fixed; left:0; right:0; bottom:0; background:#fff; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid #eceff6; box-shadow:0 -8px 26px rgba(15,20,35,.08); z-index:1000}
+    /* no zoom on inputs */
     #items-list input[type=number]{font-size:16px}
-    #view-orders .merged-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:center}
+    /* merged row layout */
+    #view-orders .merged-row{display:grid; grid-template-columns:1fr; gap:10px; align-items:center; margin-bottom:6px}
+    #view-orders .merge-box{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:center}
     #view-orders .merge-right{display:flex; justify-content:flex-start; align-items:center; gap:10px; flex-wrap:wrap}
     #view-orders .merge-left{display:flex; justify-content:flex-end; align-items:center; gap:10px; flex-wrap:wrap}
     @media (max-width:560px){
-      #view-orders .merged-row{grid-template-columns:1fr; gap:8px}
+      #view-orders .merge-box{grid-template-columns:1fr; gap:8px}
       #view-orders .merge-left{justify-content:flex-start}
     }
-    .or-menu-btn{position:absolute; left:12px; top:10px; z-index:9; border:none; border-radius:12px; padding:10px 12px; background:#101a46; color:#fff; font-weight:800; box-shadow:0 10px 30px rgba(0,0,0,.18); cursor:pointer}
-    .or-menu-panel{position:absolute; left:12px; top:54px; background:#fff; border:1px solid #e6ecf5; border-radius:14px; box-shadow:0 16px 40px rgba(15,20,35,.14); display:none; overflow:hidden; min-width:200px; z-index:9}
+    /* hamburger menu */
+    .or-menu-btn{position:absolute; left:12px; top:10px; z-index:1200; border:none; border-radius:12px; padding:10px 12px; background:#101a46; color:#fff; font-weight:800; box-shadow:0 10px 30px rgba(0,0,0,.18); cursor:pointer}
+    .or-menu-panel{position:absolute; left:12px; top:54px; background:#fff; border:1px solid #e6ecf5; border-radius:14px; box-shadow:0 16px 40px rgba(15,20,35,.14); display:none; overflow:hidden; min-width:200px; z-index:1200}
     .or-menu-panel .row{padding:12px 14px; border-bottom:1px solid #eef3fb; cursor:pointer}
     .or-menu-panel .row:last-child{border:none}
     .or-menu-panel .row:hover{background:#f7f9ff}
+    /* hide legacy bottom tabbar if exists */
     .tabbar{display:none !important}
   `;
   const tag = document.createElement('style'); tag.textContent = css; document.head.appendChild(tag);
 }
 
 function mountHamburger(){
-  const header = document.querySelector('.or-header');
+  const header = document.querySelector('.or-header') || document.querySelector('header');
   if(!header || $('#or-menu-btn')) return;
   const btn = document.createElement('button');
   btn.id='or-menu-btn'; btn.className='or-menu-btn';
-  btn.innerHTML = `<span style="display:inline-block; width:18px; height:2px; background:#fff; box-shadow:0 6px 0 #fff, 0 -6px 0 #fff; vertical-align:middle"></span> <span style="margin-inline-start:8px">תפריט</span>`;
+  btn.innerHTML = `<span style="display:inline-block; width:18px; height:2px; background:#fff; box-shadow:0 6px 0 #fff, 0 -6px 0 #fff; vertical-align:-2px"></span> <span style="margin-inline-start:8px">תפריט</span>`;
   header.appendChild(btn);
 
   const panel = document.createElement('div');
@@ -78,12 +88,13 @@ function mountHamburger(){
 }
 
 function removeEmptyNote(){
-  const candidates = [...document.body.querySelectorAll('*')].filter(n=> n.childElementCount===0 && typeof n.textContent==='string' && n.textContent.trim().startsWith('שדות ריקים'));
-  candidates.forEach(n=> n.remove());
+  [...document.body.querySelectorAll('*')].forEach(n=>{
+    if(n.childElementCount===0 && typeof n.textContent==='string' && n.textContent.trim().startsWith('שדות ריקים')) n.remove();
+  });
 }
 
 function renderHome(){
-  $('#home-date').textContent = nowLabel();
+  $('#home-date') && ($('#home-date').textContent = nowLabel());
   const enter=$('#home-to-enter'); if(enter){ enter.innerHTML='';
     suppliersToOrderToday().forEach(s=>{
       const r=document.createElement('div'); r.className='row';
@@ -119,7 +130,7 @@ function initOrderForm(){
   openOrderFor(currentSupplierId);
   const btnChange=$('#btn-change-supplier'); if(btnChange){ btnChange.onclick=openSupplierPicker; }
   const btnOpenDel=$('#btn-open-delivery'); if(btnOpenDel) btnOpenDel.onclick=()=> $('#deliver-modal').style.display='flex';
-  const btnDelClose=$('#deliver-close'); if(btnDelClose) btnDelClose.onclick=()=> $('#deliver-modal').style.display='none';
+  $('#deliver-close') && ($('#deliver-close').onclick=()=> $('#deliver-modal').style.display='none');
   removeEmptyNote();
 }
 
@@ -137,14 +148,20 @@ function openSupplierPicker(){
 }
 
 function ensureOrderHeader(s){
+  // If existing text already contains 'הזמנה', avoid doubling
   const titleEl = $('#orders-title') || $('#orders-supplier-name');
-  if(titleEl) titleEl.textContent = 'הזמנה – '+s.name;
+  if(titleEl){
+    const base='הזמנה – ';
+    const name=s.name;
+    titleEl.textContent = titleEl.textContent.includes('הזמנה') ? (base+name) : name;
+  }
   const changeBtn = $('#btn-change-supplier');
   if(changeBtn){
     changeBtn.textContent = s.name;
     const card = $('#view-orders .card');
-    if(card && card.firstElementChild && changeBtn.parentElement!==card){
-      card.insertBefore(changeBtn.closest('.row') || changeBtn, card.firstElementChild);
+    if(card && changeBtn.parentElement!==card.firstElementChild){
+      const topRow = card.firstElementChild;
+      topRow && topRow.appendChild(changeBtn);
     }
   }
 }
@@ -156,14 +173,7 @@ function createMergedRow(){
   if(!merged){
     merged = document.createElement('div');
     merged.className='row merged-row';
-    const title=document.createElement('div');
-    title.textContent='סניף + יום אספקה';
-    const content=document.createElement('div');
-    content.className='merge-box';
-    const right=document.createElement('div'); right.className='merge-right';
-    const left=document.createElement('div'); left.className='merge-left';
-    content.appendChild(right); content.appendChild(left);
-    merged.appendChild(title); merged.appendChild(content);
+    merged.innerHTML = `<div>סניף + יום אספקה</div><div class="merge-box"><div class="merge-right"></div><div class="merge-left"></div></div>`;
     const after = card.firstElementChild?.nextElementSibling || card.firstElementChild;
     card.insertBefore(merged, after);
   }
@@ -173,10 +183,16 @@ function createMergedRow(){
   const deliverBtn = $('#btn-open-delivery');
   if(branchToggle && branchToggle.parentNode!==right) right.appendChild(branchToggle);
   if(deliverBtn && deliverBtn.parentNode!==left) left.appendChild(deliverBtn);
-  const branchRow = branchToggle ? branchToggle.closest('.row') : null;
-  const deliverRow = deliverBtn ? deliverBtn.closest('.row') : null;
-  if(branchRow && branchRow!==merged) branchRow.style.display='none';
-  if(deliverRow && deliverRow!==merged) deliverRow.style.display='none';
+
+  // Hide any duplicate rows that still include these controls or their titles
+  $$('#view-orders .row').forEach(r=>{
+    if(r===merged) return;
+    if(r.contains(branchToggle) || r.contains(deliverBtn)) r.style.display='none';
+    const title = (r.firstElementChild && r.firstElementChild.textContent.trim()) || '';
+    if((/סניף/.test(title) && /אספקה/.test(title)) || title==='סניף' || title.indexOf('אספקה')>=0){
+      r.style.display='none';
+    }
+  });
 }
 
 function openOrderFor(id){
@@ -318,13 +334,13 @@ function renderHistory(){
       const s=supplierById(o.supplier_id)||{phone:'',email:''};
       const text=orderText(o);
       const phone=(s.phone||'').replace(/[^+\d]/g,''); const email=(s.email||'').trim();
-      $('#send-desc').textContent='בחר דרך שליכה';
+      $('#send-desc').textContent='בחר דרך שליחה';
       const wa=$('#send-whatsapp'), em=$('#send-email');
       wa.style.display = phone? 'inline-flex':'none';
       em.style.display = email? 'inline-flex':'none';
       $('#send-copy').onclick=()=>{ navigator.clipboard.writeText(text); alert('הועתק'); };
       if(phone) $('#send-whatsapp').onclick=()=> window.open('https://wa.me/'+encodeURIComponent(phone)+'?text='+encodeURIComponent(text),'_blank');
-      if(email) $('#send-email').onclick=()=> location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('הזמנת סחורה')+'&body='+encodeURIComponent(text);
+      if(email) $('#send-email').onclick=()=> location.href='mailto:'+encodeURIComponent('הזמנת סחורה')+'?body='+encodeURIComponent(text);
       $('#send-close').onclick=()=> $('#send-modal').style.display='none';
       $('#send-modal').style.display='flex';
     };
