@@ -1,0 +1,527 @@
+{
+  "suppliers": [
+    {
+      "id": "eastwest",
+      "name": "מזרח מערב",
+      "phone": "+972504320036",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "butan_rice",
+          "name": "אורז סושי בוטאן",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "bean_noodle",
+          "name": "אטריות שעועית",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "heinz_som",
+          "name": "מיונז היינץ SOM",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "tofu_blue",
+          "name": "טופו קשה כחול",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "dis_red",
+          "name": "דיספנסר אדום",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "dis_green_saltless",
+          "name": "דיספנסר ירוק דל מלח",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "ketchup_squeeze",
+          "name": "קטשופ לחיצה היינץ",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "skippy_big",
+          "name": "סקיפי גדול",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "chili_sweet_hb",
+          "name": "צילי מתוק הלתי בוי",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "chili_hot_hb",
+          "name": "צילי חריף הלתי בוי",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "shiitake",
+          "name": "שיטאקי",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "gochujang",
+          "name": "מחית פלפל קוראני",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "soy_15",
+          "name": "סויה גדול 15.1",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "soy_ta",
+          "name": "סויה מנות TA",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "soy_ta_green",
+          "name": "סויה מנות ירוק  TA",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "truffle_small",
+          "name": "מחית כמהין קטן",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "diplomat",
+      "name": "דיפלומט",
+      "phone": "+972545650080",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "wasabi",
+          "name": "אבקת וואסבי",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "eggs_ion",
+          "name": "א. ביצים לאיון",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "rice3",
+          "name": "אטריות אורז 3 מ\"מ",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "ginger_white",
+          "name": "ג׳ינג׳ר לבן",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "seafood",
+      "name": "מדג סי פרוט",
+      "phone": "+972544335959",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "eel",
+          "name": "צלופח",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "vannamei",
+          "name": "שרימפס וונמי",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "tobiko_g",
+          "name": "טוביקו ירוק",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "tobiko_b",
+          "name": "טוביקו שחור",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "ikura",
+          "name": "איקורא",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "catfish",
+          "name": "קאט פיש",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "creamcheese",
+      "name": "קרים ציז",
+      "phone": "+972546766364",
+      "branches": {
+        "hills": true,
+        "nord": false
+      },
+      "allowedDeliverDays": [
+        1,
+        3
+      ],
+      "items": [
+        {
+          "id": "cream_cheese",
+          "name": "קרים צ'יז",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "butter_block",
+          "name": "בלוק חמאה צהובה",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "parm_block",
+          "name": "פרמזן גוש",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "handels",
+      "name": "הנדלס",
+      "phone": "+972526010182",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 3
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "goose_pate",
+          "name": "מעדן אווז",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "mrcake",
+      "name": "מר קייק",
+      "phone": "+972544748466",
+      "branches": {
+        "hills": true,
+        "nord": false
+      },
+      "items": [
+        {
+          "id": "vanilla_paste",
+          "name": "מחית וניל",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "white_choco",
+          "name": "שוקולד לבן",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "rasp_puree",
+          "name": "מחית פטל קפוא",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "invert_sugar",
+          "name": "סוכר אינוורטי",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "baking_paper",
+          "name": "נייר אפייה",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "xanthan",
+          "name": "קסנטן",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "zinc",
+          "name": "אבץ",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "pectin_nh",
+          "name": "פקטין NH",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "dishwasher",
+      "name": "מדיח חגי",
+      "phone": "+97239071742",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "items": [
+        {
+          "id": "shine",
+          "name": "מבריק",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "soap",
+          "name": "סבון",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "dimsum",
+      "name": "דים סאם",
+      "phone": "+972585533322",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 2
+        }
+      ],
+      "items": [
+        {
+          "id": "bao_glove",
+          "name": "באן כפפה",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "dipshivuk",
+      "name": "דיפ שיווק",
+      "phone": "+972508873018",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "onion_pow",
+          "name": "אבקת בצל",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "garlic_pow",
+          "name": "אבקת שום",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "paprika",
+          "name": "פפריקה מתוקה",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "sugar_pow",
+          "name": "אבקת סוכר",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "hadaf",
+      "name": "חדפ",
+      "phone": "+972543450109",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "chef_hat",
+          "name": "כובע טבח מנייר",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "wet_wipe",
+          "name": "מגבון לח אישי קראפט",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "diva_roll",
+          "name": "גליל דיווה",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "matamei",
+      "name": "מטעמי ישראל",
+      "phone": "+972547499403",
+      "branches": {
+        "hills": false,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "gyoza_chicken",
+          "name": "גיוזה פרגית",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "gyoza_beef",
+          "name": "גיוזה בקר",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "gyoza_mush",
+          "name": "גיוזה פטריות",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "ramen_noodles",
+          "name": "אטריות ראמן",
+          "unitsPerCarton": 0
+        }
+      ]
+    },
+    {
+      "id": "icedream",
+      "name": "אייס דרים",
+      "phone": "+972542408000",
+      "branches": {
+        "hills": true,
+        "nord": true
+      },
+      "dayPairs": [
+        {
+          "order": 1,
+          "deliver": 4
+        },
+        {
+          "order": 4,
+          "deliver": 1
+        }
+      ],
+      "items": [
+        {
+          "id": "boiron_mandarin",
+          "name": "מחית מנדרינה בוארון",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "boiron_passion",
+          "name": "מחית פסיפלורה בוארון",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "boiron_bloodorange",
+          "name": "מחית תפוז דם בוארון",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "blueberry_frozen",
+          "name": "בלוברי קפוא",
+          "unitsPerCarton": 0,
+          "cartonOnly": true
+        },
+        {
+          "id": "raspberry_frozen",
+          "name": "פטל אדום קפוא",
+          "unitsPerCarton": 0,
+          "cartonOnly": true
+        },
+        {
+          "id": "pineapple_2kg",
+          "name": "אננס 2 קג",
+          "unitsPerCarton": 0
+        },
+        {
+          "id": "mango_2kg",
+          "name": "מנגו 2 קג",
+          "unitsPerCarton": 0
+        }
+      ]
+    }
+  ]
+}
