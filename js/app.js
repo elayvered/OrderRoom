@@ -1,8 +1,10 @@
-// Order Room v6.2.3 — patch for orders screen layout & menu
-// - Merge branch + delivery in a single row and hide all duplicates
-// - Fixed footer with safe-area + proper bottom padding
-// - Top spacing so content doesn't get cut by header
-// - Title guard to avoid doubled 'הזמנה –'
+// Order Room v6.2.4 — hotfix
+// - Replace bottom sheet with a single floating action button (FAB) 'שלח הזמנה'
+// - Hide any legacy .order-footer block
+// - Keep merged 'סניף + יום אספקה' row
+// - Extra top spacing so first card is not clipped
+// - No-zoom numeric inputs
+// NOTE: This file is drop-in to /js/app.js
 
 const DAY=['א','ב','ג','ד','ה','ו','ש'];
 const CFG_KEY='or_cfg_v620', ORD_KEY='or_orders_v620';
@@ -32,12 +34,21 @@ async function loadConfig(){
 
 function injectPatchStyles(){
   const css = `
-    /* header top spacing so first card won't be cut */
-    main{padding-top:14px; padding-bottom:120px}
-    /* fixed footer with safe-area */
-    #view-orders .order-footer{position:fixed; left:0; right:0; bottom:0; background:#fff; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid #eceff6; box-shadow:0 -8px 26px rgba(15,20,35,.08); z-index:1000}
-    /* no zoom on inputs */
-    #items-list input[type=number]{font-size:16px}
+    /* general spacing */
+    main{padding-top:18px; padding-bottom:120px}
+    #view-orders .card:first-of-type{margin-top:6px}
+    /* hide legacy footer if exists */
+    #view-orders .order-footer{display:none !important}
+    /* floating send button */
+    #fab-send{
+      position:fixed; inset-inline:50% auto; transform:translateX(-50%);
+      bottom:16px; z-index:1100;
+      background:#14b36b; color:#fff; border:none; cursor:pointer;
+      padding:14px 22px; border-radius:999px; font-weight:800; font-size:16px;
+      box-shadow:0 14px 32px rgba(20,179,107,.35);
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+    #fab-send:active{filter:brightness(.95)}
     /* merged row layout */
     #view-orders .merged-row{display:grid; grid-template-columns:1fr; gap:10px; align-items:center; margin-bottom:6px}
     #view-orders .merge-box{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:center}
@@ -47,14 +58,10 @@ function injectPatchStyles(){
       #view-orders .merge-box{grid-template-columns:1fr; gap:8px}
       #view-orders .merge-left{justify-content:flex-start}
     }
-    /* hamburger menu */
-    .or-menu-btn{position:absolute; left:12px; top:10px; z-index:1200; border:none; border-radius:12px; padding:10px 12px; background:#101a46; color:#fff; font-weight:800; box-shadow:0 10px 30px rgba(0,0,0,.18); cursor:pointer}
-    .or-menu-panel{position:absolute; left:12px; top:54px; background:#fff; border:1px solid #e6ecf5; border-radius:14px; box-shadow:0 16px 40px rgba(15,20,35,.14); display:none; overflow:hidden; min-width:200px; z-index:1200}
-    .or-menu-panel .row{padding:12px 14px; border-bottom:1px solid #eef3fb; cursor:pointer}
-    .or-menu-panel .row:last-child{border:none}
-    .or-menu-panel .row:hover{background:#f7f9ff}
-    /* hide legacy bottom tabbar if exists */
-    .tabbar{display:none !important}
+    /* ensure numeric inputs don't trigger zoom */
+    #items-list input[type=number]{font-size:16px}
+    /* hide any duplicate branch/delivery rows */
+    #view-orders .row.is-duplicate{display:none !important}
   `;
   const tag = document.createElement('style'); tag.textContent = css; document.head.appendChild(tag);
 }
@@ -84,12 +91,6 @@ function mountHamburger(){
   });
   document.addEventListener('click', (e)=>{
     if(!e.target.closest('#or-menu-panel') && !e.target.closest('#or-menu-btn')) panel.style.display='none';
-  });
-}
-
-function removeEmptyNote(){
-  [...document.body.querySelectorAll('*')].forEach(n=>{
-    if(n.childElementCount===0 && typeof n.textContent==='string' && n.textContent.trim().startsWith('שדות ריקים')) n.remove();
   });
 }
 
@@ -131,7 +132,23 @@ function initOrderForm(){
   const btnChange=$('#btn-change-supplier'); if(btnChange){ btnChange.onclick=openSupplierPicker; }
   const btnOpenDel=$('#btn-open-delivery'); if(btnOpenDel) btnOpenDel.onclick=()=> $('#deliver-modal').style.display='flex';
   $('#deliver-close') && ($('#deliver-close').onclick=()=> $('#deliver-modal').style.display='none');
-  removeEmptyNote();
+
+  // Ensure FAB exists and is wired (the supplier is set in openOrderFor)
+  ensureFab();
+  // Hide any leftover note paragraph
+  $$('#view-orders .card .row').forEach(r=>{
+    const txt=(r.firstChild&&r.firstChild.textContent||'').trim();
+    if(/^שדות ריקים/.test(txt)) r.classList.add('is-duplicate');
+  });
+}
+
+function ensureFab(){
+  if(!$('#fab-send')){
+    const b=document.createElement('button');
+    b.id='fab-send';
+    b.textContent='שלח הזמנה';
+    document.body.appendChild(b);
+  }
 }
 
 function openSupplierPicker(){
@@ -148,22 +165,10 @@ function openSupplierPicker(){
 }
 
 function ensureOrderHeader(s){
-  // If existing text already contains 'הזמנה', avoid doubling
-  const titleEl = $('#orders-title') || $('#orders-supplier-name');
-  if(titleEl){
-    const base='הזמנה – ';
-    const name=s.name;
-    titleEl.textContent = titleEl.textContent.includes('הזמנה') ? (base+name) : name;
-  }
+  const title = $('#orders-title');
+  if(title){ title.textContent = 'הזמנה – '+s.name; }
   const changeBtn = $('#btn-change-supplier');
-  if(changeBtn){
-    changeBtn.textContent = s.name;
-    const card = $('#view-orders .card');
-    if(card && changeBtn.parentElement!==card.firstElementChild){
-      const topRow = card.firstElementChild;
-      topRow && topRow.appendChild(changeBtn);
-    }
-  }
+  if(changeBtn){ changeBtn.textContent=s.name; }
 }
 
 function createMergedRow(){
@@ -184,13 +189,13 @@ function createMergedRow(){
   if(branchToggle && branchToggle.parentNode!==right) right.appendChild(branchToggle);
   if(deliverBtn && deliverBtn.parentNode!==left) left.appendChild(deliverBtn);
 
-  // Hide any duplicate rows that still include these controls or their titles
+  // mark duplicates to hide
   $$('#view-orders .row').forEach(r=>{
     if(r===merged) return;
-    if(r.contains(branchToggle) || r.contains(deliverBtn)) r.style.display='none';
+    if(r.contains(branchToggle) || r.contains(deliverBtn)) r.classList.add('is-duplicate');
     const title = (r.firstElementChild && r.firstElementChild.textContent.trim()) || '';
     if((/סניף/.test(title) && /אספקה/.test(title)) || title==='סניף' || title.indexOf('אספקה')>=0){
-      r.style.display='none';
+      r.classList.add('is-duplicate');
     }
   });
 }
@@ -198,6 +203,8 @@ function createMergedRow(){
 function openOrderFor(id){
   const s=supplierById(id); if(!s) return; currentSupplierId=id;
   ensureOrderHeader(s);
+
+  // Branch toggle
   const bt=$('#branch-toggle'); if(bt){ bt.innerHTML='';
     const branches=[]; if(s.branches?.hills) branches.push({id:'hills',name:'הילס',address:'אריק איינשטיין 3, הרצליה'}); if(s.branches?.nord) branches.push({id:'nord',name:'נורדאו',address:'נורדאו 4, הרצליה'});
     currentBranch = branches[0]||null;
@@ -205,10 +212,16 @@ function openOrderFor(id){
     branches.forEach((b,i)=>{ const btn=document.createElement('button'); btn.textContent=b.name; if(i===0) btn.classList.add('active'); btn.onclick=()=>{ currentBranch=b; $$('#branch-toggle .segmented button').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); showLastQtyHints(); }; seg.appendChild(btn); });
     bt.appendChild(seg);
   }
+
+  // Delivery default
   currentDeliverDow = defaultDeliverDayFor(id);
   const dl=$('#deliver-label'); if(dl) dl.textContent = labelDeliver(currentDeliverDow);
   const chips=$('#deliver-chips'); if(chips){ chips.innerHTML=''; DAY.forEach((d,i)=>{ const b=document.createElement('button'); b.textContent='יום '+d; if(i===currentDeliverDow) b.classList.add('active'); b.onclick=()=>{ currentDeliverDow=i; const dl2=$('#deliver-label'); if(dl2) dl2.textContent=labelDeliver(currentDeliverDow); $('#deliver-modal').style.display='none'; $$('#deliver-chips button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }; chips.appendChild(b) }); }
+
+  // merge row
   createMergedRow();
+
+  // Render items
   const list=$('#items-list'); if(list){ list.innerHTML='';
     (s.items||[]).forEach(it=>{
       if(it.unitsPerCarton==null) it.unitsPerCarton=1;
@@ -234,6 +247,7 @@ function openOrderFor(id){
       });
     });
   }
+
   function showLastQtyHints(){
     const orders=read(ORD_KEY,[]);
     const last = orders.find(o=> o.supplier_id===s.id && (currentBranch? o.branch_id===currentBranch.id : true));
@@ -245,8 +259,13 @@ function openOrderFor(id){
     });
   }
   showLastQtyHints();
-  const saveBtn=$('#btn-save'); if(saveBtn) saveBtn.onclick=()=> saveOrder(s);
-  const sendBtn=$('#btn-send'); if(sendBtn) sendBtn.onclick=()=> sendOrderFlow(s);
+
+  // Wire FAB to sending current supplier
+  ensureFab();
+  const fab=$('#fab-send');
+  if(fab){
+    fab.onclick=()=> sendOrderFlow(s);
+  }
 }
 
 function collectPicked(){
@@ -287,13 +306,6 @@ function orderText(o){
     '', 'אודה לאישורכם בהודעה חוזרת'
   ].filter(Boolean);
   return lines.join('\n');
-}
-
-function saveOrder(s){
-  const items=collectPicked(); if(!items.length){ alert('לא נבחרו פריטים'); return }
-  const o=buildOrder(s);
-  const all=read(ORD_KEY,[]); all.unshift(o); write(ORD_KEY,all);
-  setView('history');
 }
 
 function sendOrderFlow(s){
