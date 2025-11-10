@@ -1,137 +1,78 @@
+
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"/>
-  <title>Order Room</title>
-  <link rel="stylesheet" href="css/styles.css?v=6.2.5"/>
-  <script src="or.config.js" defer></script>
-  <script defer src="js/app.js?v=6.2.5"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Order Room v6.2.7</title>
+<link rel="stylesheet" href="./styles.css?v=6.2.7" />
 </head>
 <body>
-  <header class="or-header">
-    <div class="brand" id="brand-home">
-      <img src="assets/logo.png" alt="Sushi Room" class="logo">
-      <div class="titles">
-        <div class="app">Order Room</div>
-        <div class="sub">אפליקציית הזמנות סחורה החכמה של סושי רום</div>
-      </div>
-    </div>
-    <button id="or-menu-btn" class="or-menu-btn" aria-label="תפריט">
-      <span class="txt">תפריט</span>
-    </button>
-    <nav id="or-menu-panel" class="or-menu-panel">
-      <button class="row tab" data-view="home">בית</button>
-      <button class="row tab" data-view="orders">הזמנות</button>
-      <button class="row tab" data-view="history">היסטוריה</button>
-      <button class="row tab" data-view="settings">הגדרות</button>
-    </nav>
+  <header>
+    <div class="title">Order Room</div>
+    <img class="logo" src="./logo_white.svg" alt="SUSHI ROOM" />
   </header>
 
-  <main>
-    <section id="view-home" class="view active">
-      <div class="screen-title"><span id="home-date"></span></div>
-      <div class="card">
-        <div class="card-title">הזמנות להכניס היום</div>
-        <div id="home-to-enter" class="list"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">הזמנות שמגיעות היום</div>
-        <div id="home-arrivals" class="list"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">הזמנות אחרונות</div>
-        <div id="home-recent" class="list"></div>
-      </div>
-    </section>
-
-    <section id="view-orders" class="view">
-      <div class="card card-tight">
-        <div class="inline-title">
-          <div class="crumb">
-            <button id="btn-change-supplier" class="btn ghost">בחר ספק</button>
-          </div>
-          <div id="orders-title" class="screen-title">הזמנה</div>
-        </div>
-        <div class="merged-box merged-tight">
-          <div class="right-side">
-            <div class="label">סניף</div>
-            <div id="branch-toggle"></div>
-          </div>
-          <div class="left-side">
-            <div class="label">יום אספקה</div>
-            <button id="btn-open-delivery" class="btn">
-              <img src="assets/icons/calendar.svg" alt="" class="ic"> <span id="deliver-label">יום א</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">פריטים</div>
-        <div id="items-list" class="items"></div>
-
-        <div class="notes">
-          <div class="label">הערות להזמנה</div>
-          <textarea id="order-notes" placeholder="הערות, עדכונים, בקשות"></textarea>
-        </div>
-
-        <div class="actions-row big-actions">
-          <button id="btn-save-order" class="btn ghost big">שמור הזמנה</button>
-          <button id="btn-open-send" class="btn primary big">שלח הזמנה</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-history" class="view">
-      <div class="card">
-        <div class="card-title">היסטוריית הזמנות</div>
-        <div id="history-list" class="list"></div>
-      </div>
-    </section>
-
-    <section id="view-settings" class="view">
-      <div class="card">
-        <div class="card-title">הגדרות</div>
-        <div class="settings">
-          <div>גרסה: <strong id="ver">6.2.5</strong></div>
-          <div>חיבור למסד נתונים: <span id="conn">לא מוגדר</span></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div id="supplier-modal" class="modal" data-close>
-    <div class="sheet" role="dialog" aria-label="בחר ספק">
-      <div class="sheet-title">בחר ספק</div>
-      <div id="supplier-grid" class="list"></div>
+  <div class="container" id="view-home">
+    <div class="card">
+      <h3 class="h">מה צריך להזמין היום</h3>
+      <div id="orderToday" class="grid-2"></div>
     </div>
-  </div>
-
-  <div id="deliver-modal" class="modal" data-close>
-    <div class="sheet" role="dialog" aria-label="בחר יום אספקה">
-      <div class="sheet-title">בחר יום אספקה</div>
-      <div id="deliver-chips" class="chips"></div>
-    </div>
-  </div>
-
-  <div id="send-modal" class="modal" data-close>
-    <div class="sheet" role="dialog" aria-label="שליחת הזמנה">
-      <div class="sheet-title">שליחת הזמנה</div>
-      <p id="send-desc" class="muted">בחר איך לשלוח</p>
-      <div class="send-buttons">
-        <button id="send-whatsapp" class="btn wa"><img src="assets/icons/whatsapp.svg" class="ic" alt=""> וואטסאפ</button>
-        <button id="send-email" class="btn email"><img src="assets/icons/mail.svg" class="ic" alt=""> מייל</button>
-        <button id="send-copy" class="btn ghost"><img src="assets/icons/copy.svg" class="ic" alt=""> העתקה</button>
+    <div class="card">
+      <h3 class="h">הזמנות שמגיעות היום</h3>
+      <div class="grid-2">
+        <div>
+          <div class="sub">הילס</div>
+          <div id="deliverHills" class="grid-2"></div>
+        </div>
+        <div>
+          <div class="sub">נורדאו</div>
+          <div id="deliverNordau" class="grid-2"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div id="text-modal" class="modal" data-close>
-    <div class="sheet" role="dialog" aria-label="תוכן ההזמנה">
-      <div class="sheet-title">תוכן ההזמנה</div>
-      <div id="order-preview" class="order-preview"></div>
+  <div class="container hidden" id="view-order">
+    <div class="card">
+      <div class="row">
+        <button id="supplierBtn" class="button secondary">בחר ספק</button>
+        <div class="row" style="margin-inline-start:auto">
+          <button id="branchBtn" class="button secondary">סניף</button>
+          <button id="dayBtn" class="button secondary">יום אספקה</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="itemsList"></div>
+
+    <div class="card">
+      <div class="sub">הערות להזמנה</div>
+      <textarea id="notes" style="width:100%;min-height:80px;border-radius:12px;border:1px solid #e4e9f1;padding:10px"></textarea>
+    </div>
+
+    <div class="sticky-actions">
+      <button id="saveBtn" class="button secondary">שמור הזמנה</button>
+      <button id="sendBtn" class="button primary">שלח הזמנה</button>
     </div>
   </div>
+
+  <footer class="menu">
+    <button id="menuBtn" class="menu-btn">תפריט</button>
+  </footer>
+
+  <!-- popovers -->
+  <div id="pop-suppliers" class="pop hidden"></div>
+  <div id="pop-day" class="pop hidden"></div>
+  <div id="pop-send" class="pop hidden">
+    <div class="row">
+      <button class="button secondary" data-send="whatsapp">וואטסאפ</button>
+      <button class="button secondary" data-send="email">מייל</button>
+      <button class="button secondary" data-send="copy">העתק</button>
+    </div>
+  </div>
+
+<script type="module" src="./data.js?v=6.2.7"></script>
+<script type="module" src="./app.js?v=6.2.7"></script>
 </body>
 </html>
