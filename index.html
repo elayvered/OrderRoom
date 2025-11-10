@@ -1,78 +1,120 @@
-
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Order Room v6.2.7</title>
-<link rel="stylesheet" href="./styles.css?v=6.2.7" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Order Room – סושי רום</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <div class="title">Order Room</div>
-    <img class="logo" src="./logo_white.svg" alt="SUSHI ROOM" />
-  </header>
+<header class="app-header">
+  <button id="menuBtn" class="menu-btn">תפריט</button>
+  <div class="brand" id="homeLogo">
+    <img src="assets/logo-white.png" alt="SUSHI ROOM" />
+  </div>
+  <div class="title">
+    <div class="app-name">Order Room</div>
+    <div class="app-sub">אפליקציית הזמנות סחורה החכמה של סושי רום</div>
+  </div>
+</header>
 
-  <div class="container" id="view-home">
-    <div class="card">
-      <h3 class="h">מה צריך להזמין היום</h3>
-      <div id="orderToday" class="grid-2"></div>
+<nav id="mainMenu" class="menu-popover">
+  <a href="#home" data-nav="home">בית</a>
+  <a href="#orders" data-nav="orders">הזמנה חדשה</a>
+  <a href="#history" data-nav="history">היסטוריה</a>
+  <a href="#settings" data-nav="settings">הגדרות</a>
+</nav>
+
+<main id="app">
+  <section id="homeView" class="view">
+    <div class="section">
+      <h2 class="section-title">הזמנות להכניס היום</h2>
+      <div id="todayToPlace" class="chips"></div>
     </div>
-    <div class="card">
-      <h3 class="h">הזמנות שמגיעות היום</h3>
-      <div class="grid-2">
+
+    <div class="section">
+      <h2 class="section-title">הזמנות שמגיעות היום</h2>
+      <div class="two-columns">
         <div>
-          <div class="sub">הילס</div>
-          <div id="deliverHills" class="grid-2"></div>
+          <h3 class="col-title">הילס</h3>
+          <div id="arrivingHills" class="list-simple"></div>
         </div>
         <div>
-          <div class="sub">נורדאו</div>
-          <div id="deliverNordau" class="grid-2"></div>
+          <h3 class="col-title">נורדאו</h3>
+          <div id="arrivingNordau" class="list-simple"></div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="container hidden" id="view-order">
-    <div class="card">
-      <div class="row">
-        <button id="supplierBtn" class="button secondary">בחר ספק</button>
-        <div class="row" style="margin-inline-start:auto">
-          <button id="branchBtn" class="button secondary">סניף</button>
-          <button id="dayBtn" class="button secondary">יום אספקה</button>
+  <section id="orderView" class="view hidden">
+    <div class="order-header">
+      <div class="order-row">
+        <h1 class="order-title">הזמנה חדשה</h1>
+        <button id="supplierBtn" class="pill supplier-pill">בחר ספק</button>
+      </div>
+      <div class="order-row inline-controls">
+        <div class="branch-switch">
+          <button class="chip" data-branch="הילס">הילס</button>
+          <button class="chip" data-branch="נורדאו">נורדאו</button>
+        </div>
+        <div class="delivery-select">
+          <button id="deliveryDayBtn" class="pill">
+            <span>יום אספקה: </span><strong id="deliveryDayText">—</strong>
+          </button>
+          <div id="deliveryDayDropdown" class="dropdown hidden"></div>
         </div>
       </div>
     </div>
 
-    <div class="card" id="itemsList"></div>
+    <div id="itemsList" class="items-list"></div>
 
-    <div class="card">
-      <div class="sub">הערות להזמנה</div>
-      <textarea id="notes" style="width:100%;min-height:80px;border-radius:12px;border:1px solid #e4e9f1;padding:10px"></textarea>
+    <div class="section">
+      <label class="label" for="orderNotes">הערות להזמנה</label>
+      <textarea id="orderNotes" placeholder="הוסף הערות להזמנה..."></textarea>
     </div>
 
-    <div class="sticky-actions">
-      <button id="saveBtn" class="button secondary">שמור הזמנה</button>
-      <button id="sendBtn" class="button primary">שלח הזמנה</button>
+    <div class="bottom-actions">
+      <button id="saveOrder" class="btn ghost">שמור הזמנה</button>
+      <button id="sendOrder" class="btn primary">שלח הזמנה</button>
+    </div>
+  </section>
+
+  <section id="historyView" class="view hidden">
+    <h2 class="section-title">היסטוריית הזמנות</h2>
+    <div id="historyList" class="history"></div>
+  </section>
+
+  <section id="settingsView" class="view hidden">
+    <h2 class="section-title">הגדרות</h2>
+    <div class="settings-version">גרסה 6.2.6</div>
+    <div class="settings-block">
+      <h3>ספקים</h3>
+      <div id="settingsSuppliers"></div>
+    </div>
+  </section>
+</main>
+
+<div id="supplierModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-sheet">
+    <div class="modal-title">בחר ספק</div>
+    <div id="supplierGrid" class="grid-2"></div>
+  </div>
+</div>
+
+<div id="sendModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-sheet">
+    <div class="modal-title">שלח הזמנה</div>
+    <div class="send-actions">
+      <button id="sendWhatsApp" class="send-btn wa">וואטסאפ</button>
+      <button id="sendEmail" class="send-btn mail">מייל</button>
+      <button id="copyOrder" class="send-btn copy">העתק</button>
     </div>
   </div>
+</div>
 
-  <footer class="menu">
-    <button id="menuBtn" class="menu-btn">תפריט</button>
-  </footer>
-
-  <!-- popovers -->
-  <div id="pop-suppliers" class="pop hidden"></div>
-  <div id="pop-day" class="pop hidden"></div>
-  <div id="pop-send" class="pop hidden">
-    <div class="row">
-      <button class="button secondary" data-send="whatsapp">וואטסאפ</button>
-      <button class="button secondary" data-send="email">מייל</button>
-      <button class="button secondary" data-send="copy">העתק</button>
-    </div>
-  </div>
-
-<script type="module" src="./data.js?v=6.2.7"></script>
-<script type="module" src="./app.js?v=6.2.7"></script>
+<script src="app.js"></script>
 </body>
 </html>
