@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Order Room v6.9</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <button class="icon-btn ghost" id="btnMenu" aria-label="תפריט"><img src="assets/hamburger.svg" alt=""></button>
+  <div class="header-logo"><img src="assets/logo-black.png" alt="SUSHI ROOM"></div>
+  <div></div>
+</header>
+
+<main id="screenHome" class="screen active">
+  <section class="home-hero">
+    <h1>אפליקציית הזמנות סחורה החכמה של סושי רום</h1>
+    <div class="today-line" id="todayLine"></div>
+    <div class="hero-actions">
+      <button id="btnNewOrder" class="btn primary large">הזמנה חדשה</button>
+    </div>
+  </section>
+
+  <section class="home-suppliers">
+    <h2>ספקים להזמנה היום</h2>
+    <div id="todaySuppliers" class="supplier-grid"></div>
+  </section>
+
+  <section class="home-recent">
+    <h2>הזמנות אחרונות</h2>
+    <div id="recentOrders" class="recent-grid"></div>
+  </section>
+</main>
+
+<main id="screenOrder" class="screen">
+  <div class="order-head">
+    <div class="order-title">
+      <span class="new-pill">הזמנה חדשה</span>
+      <button id="btnSupplierName" class="supplier-chip">בחר ספק</button>
+    </div>
+    <div class="order-row order-meta">
+      <div class="branch-switch" id="branchSwitch"></div>
+      <button id="btnDeliveryDay" class="day-chip" aria-haspopup="true" aria-expanded="false">בחר יום אספקה</button>
+    </div>
+  </div>
+
+  <div id="itemsList" class="items"></div>
+
+  <div class="order-notes">
+    <label>הערות להזמנה</label>
+    <textarea id="orderNotes" placeholder="למשל: לא לפרוס סלמון; להוסיף כמות נוספת לפריט X"></textarea>
+  </div>
+
+  <div class="order-actions-bar" id="sendBar">
+    <button id="btnSave" class="btn secondary">שמור הזמנה</button>
+    <button id="btnSend" class="btn primary">שלח הזמנה</button>
+  </div>
+</main>
+
+<aside id="slideMenu" class="slide-menu" aria-hidden="true">
+  <nav class="menu-list">
+    <button class="menu-item" data-nav="home">בית</button>
+    <button class="menu-item" data-nav="orders">היסטוריה</button>
+    <button class="menu-item" data-nav="settings">הגדרות</button>
+  </nav>
+</aside>
+<div id="backdrop" class="backdrop"></div>
+
+<div id="supplierSheet" class="sheet" aria-hidden="true">
+  <div class="sheet-body">
+    <h3>בחר ספק</h3>
+    <div id="supplierGrid" class="supplier-grid two-cols"></div>
+  </div>
+</div>
+
+<div id="daySheet" class="sheet" aria-hidden="true">
+  <div class="sheet-body">
+    <h3>בחר יום אספקה</h3>
+    <div id="daysRow" class="days-row"></div>
+  </div>
+</div>
+
+<div id="sendDialog" class="dialog" aria-hidden="true">
+  <div class="dialog-card">
+    <h3>סיכום הזמנה</h3>
+    <div id="orderSummary" class="summary"></div>
+    <div class="send-actions">
+      <button class="send-btn" id="sendWhatsApp"><img src="assets/whatsapp.svg" alt=""> וואטסאפ</button>
+      <button class="send-btn" id="sendMail"><img src="assets/mail.svg" alt=""> מייל</button>
+      <button class="send-btn" id="sendCopy"><img src="assets/copy.svg" alt=""> העתקה</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const OR_SUPPLIERS = [
+  {
+    "id": "eastwest",
+    "name": "מזרח מערב",
+    "phone": "+972504320036",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "אבקת וואסבי",
+      "א. ביצים לאיון",
+      "אטריות אורז 3 מ\"מ",
+      "ג'ינג'ר לבן",
+      "מגש 03",
+      "מגש 07",
+      "מחית צ'ילי בשמן",
+      "מחית קארי ירוק",
+      "מחית קארי אדום",
+      "תמרהינדי",
+      "מיסו לבן דאשי",
+      "מירין גדול",
+      "סויה ירוק גדול",
+      "סויה לל\"ג גדול",
+      "סאקה גדול",
+      "פנקו",
+      "רוטב דגים 4 ל",
+      "רוטב פטריות",
+      "שומשום שחור",
+      "שמן צ'ילי",
+      "שמן שומשום",
+      "קרם קוקוס גדול",
+      "טמפורה",
+      "יוזו גדול",
+      "יוזו גדול ללא מלח",
+      "סוכר דקלים",
+      "צדפות שימורים",
+      "בצל מטוגן",
+      "אבקת חרדל יפני",
+      "טוגראשי",
+      "טום יאם",
+      "קנפיו קילו",
+      "מגש מסיבה L",
+      "מגש מסיבה M",
+      "סויה גולדן מאונטן",
+      "חטיפי אצות",
+      "סויה כהה",
+      "חומץ אורז",
+      "אנשובי בשמן גדול",
+      "אצות נורי קוריאה",
+      "אורז יסמין",
+      "שיפודי קשר",
+      "אבקת מאצה",
+      "ליקר מאצה",
+      "רשת לסיר אורז",
+      "כף ווק",
+      "ווק",
+      "דפי רשת אורז",
+      "אצות וואקמה",
+      "אצות קומבו",
+      "דאשי",
+      "אררה",
+      "צ'ופסטיקס חבק שחור",
+      "שיפודי יקיטורי"
+    ]
+  },
+  {
+    "id": "diplomat",
+    "name": "דיפלומט",
+    "phone": "+972545650080",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "אורז סושי בוטאן",
+      "אטריות שעועית",
+      "מיונז היינץ SOM",
+      "טופו קשה כחול",
+      "דיספנסר אדום",
+      "דיספנסר ירוק דל מלח",
+      "קטשופ לחיצה היינץ",
+      "סקיפי גדול",
+      "צ'ילי מתוק הלתי בוי",
+      "צ'ילי חריף הלתי בוי",
+      "שיטאקי",
+      "מחית פלפל קוראני",
+      "סויה גדול 15.1",
+      "סויה מנות TA",
+      "סויה מנות ירוק TA",
+      "מחית כמהין קטן"
+    ]
+  },
+  {
+    "id": "madag",
+    "name": "מדג סי פרוט",
+    "phone": "+972544335959",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "צלופח",
+      "שרימפס וונמי",
+      "טוביקו ירוק",
+      "טוביקו שחור",
+      "איקורא",
+      "קאט פיש"
+    ]
+  },
+  {
+    "id": "creamcheese",
+    "name": "קרים צ'יז",
+    "phone": "+972546766364",
+    "branches": [
+      "הילס"
+    ],
+    "allowedDeliveryDays": [
+      "ב",
+      "ד"
+    ],
+    "items": [
+      "קרים צ'יז",
+      "בלוק חמאה צהובה",
+      "פרמזן גוש"
+    ]
+  },
+  {
+    "id": "handels",
+    "name": "הנדלס",
+    "phone": "+972526010182",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ד",
+      "ה": "ב"
+    },
+    "items": [
+      "מעדן אווז"
+    ]
+  },
+  {
+    "id": "mrcake",
+    "name": "מר קייק",
+    "phone": "+972544748466",
+    "branches": [
+      "הילס"
+    ],
+    "items": [
+      "מחית וניל",
+      "שוקולד לבן",
+      "מחית פטל קפוא",
+      "סוכר אינוורטי",
+      "נייר אפייה",
+      "קסנטן",
+      "אבץ",
+      "פקטין NH"
+    ]
+  },
+  {
+    "id": "dishwasher",
+    "name": "מדיח חגי",
+    "phone": "+97239071742",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "items": [
+      "מבריק",
+      "סבון"
+    ]
+  },
+  {
+    "id": "dimsum",
+    "name": "דים סאם",
+    "phone": "+972585533322",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ג"
+    },
+    "items": [
+      "באן כפפה"
+    ]
+  },
+  {
+    "id": "deepmarketing",
+    "name": "דיפ שיווק",
+    "phone": "+972508873018",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "אבקת בצל",
+      "אבקת שום",
+      "פפריקה מתוקה",
+      "אבקת סוכר",
+      "קשיו מסוכר",
+      "בוטן מטוגן שיקרצקי",
+      "סילאן גאלון",
+      "חרדל חלק דלי",
+      "חומץ סינטטי לבן שקוף",
+      "מונוסודיום",
+      "מיונז הלמנס גדול",
+      "שמן סויה פלסטיק",
+      "מלח גס שרוול",
+      "מלח דק שרוול",
+      "מקלות קינמון",
+      "מלח לימון ק",
+      "סוכר לבן סוגת שרוול",
+      "סוכר חום כהה",
+      "אבקת אפיה",
+      "פסיטוק מקולף שלם",
+      "קמח תפוח אדמה",
+      "קמח לבן שרוול",
+      "קוקוס טחון לבן",
+      "קורנפלור",
+      "שומשום לבן",
+      "ציר בקר משחה קנור",
+      "רוטב נפאלי קנור",
+      "דמי גלאס",
+      "דבש",
+      "כוכב אניס",
+      "הל שלם",
+      "זרעי כוסברה",
+      "צלפים במלח",
+      "בלסמי",
+      "פירורי לחם 1 קג"
+    ]
+  },
+  {
+    "id": "hadf",
+    "name": "חדפ",
+    "phone": "+972543450109",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "כובע טבח מנייר",
+      "מגבון לח אישי קראפט",
+      "גליל דיווה",
+      "נייר תעשייתי",
+      "נוזל כלים מיקס 7",
+      "נוזל רצפות 10 ל מיקס 2",
+      "מסיר שומנים 108",
+      "אקונומיקה",
+      "תבליות מלח 25",
+      "שקיות אשפה שחור",
+      "נילון הפרדה",
+      "שקית גופיה שחור",
+      "נייר קופות",
+      "כלורוסופט DL3",
+      "כפפות ויניל ללא אבקה M",
+      "כפפות וניל ללא אבקה L",
+      "כפפות ניטריל שחור L",
+      "סקוץ' יפני 36",
+      "מטליות X70",
+      "מילוי מטליות דלי",
+      "סקוץ ברזלית 12",
+      "ניילון נצמד 30 קטן",
+      "ניילון נצמד 45 ארוך",
+      "קיסם שחור עטוף",
+      "קש שחור",
+      "רדיד אלומניום",
+      "שקיות שקילה 18/25",
+      "שקיות שקילה 20/30",
+      "שקיות שקילה 30/40",
+      "שקית אוכל פשוט",
+      "צץ רץ - רדיד אלומניום",
+      "שק זילוף ירוק",
+      "שקיות אפור 50\\70",
+      "ניר קופה טרמי מדבקה",
+      "מיקרופייבר שייני דקו",
+      "סינר חד פעמי שטיפה",
+      "נייר אפייה 30/50",
+      "קערה מלבני קרפט 500",
+      "קערה מלבני קרפט 750",
+      "קערה מלבני קרפט 1000",
+      "מכסה חם מלבני 500",
+      "גביע קראפט 500",
+      "מכסה לגביע קראפ 500",
+      "קערה מרובע 1320",
+      "מכסה מרובע חם 1320",
+      "גביע רוטב מחובר 10 CC",
+      "גביע רוטב מחובר 30 CC",
+      "גביע רוטב מחובר 50 CC",
+      "גביע רוטב מחובר 100 CC",
+      "בל 500 מ\"ל",
+      "בל 750 מ\"ל",
+      "מפיות 40/40 לבן ספר",
+      "מזלג קשיח שחור",
+      "סכין קשיח שחור",
+      "כף קשיח שחור",
+      "מפיות קוקטייל שחור",
+      "מפיות קוקטייל 893",
+      "קופסא 1 ל",
+      "קופסא 2 ל",
+      "קופסא 4.5 ל",
+      "מכסה 2 ל",
+      "מכסה 4.5 ל",
+      "צץ רץ מניפה slim",
+      "צץ רץ 3 קימברלי",
+      "סחבות רצפה",
+      "כוס קראפט חום",
+      "ספריי נירוסטה",
+      "מטאטא בית",
+      "מגב קטן",
+      "מגב גדול",
+      "יאה + מקל",
+      "מקל עץ",
+      "פרו 101"
+    ]
+  },
+  {
+    "id": "matamei",
+    "name": "מטעמי ישראל",
+    "phone": "+972547499403",
+    "branches": [
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "גיוזה פרגית",
+      "גיוזה בקר",
+      "גיוזה פטריות",
+      "אטריות ראמן"
+    ]
+  },
+  {
+    "id": "icedream",
+    "name": "אייס דרים",
+    "phone": "+972542408000",
+    "branches": [
+      "הילס",
+      "נורדאו"
+    ],
+    "orderToDelivery": {
+      "ב": "ה",
+      "ה": "ב"
+    },
+    "items": [
+      "מחית מנדרינה בוארון",
+      "מחית פסיפלורה בוארון",
+      "מחית תפוז דם בוארון",
+      "בלוברי קפוא (רק בקרטון)",
+      "פטל אדום קפוא (רק בקרטון)",
+      "אננס 2 קג",
+      "מנגו 2 קג"
+    ]
+  }
+];
+</script>
+<script src="app.js"></script>
+</body>
+</html>
