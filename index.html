@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>Order Room v7.0</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b5fff">
+</head>
+<body>
+<header class="app-header">
+  <button id="menuBtn" class="btn menu-btn"><img src="assets/menu.svg" alt=""> תפריט</button>
+  <div class="brand" id="brandHome">
+    <img src="assets/logo-black.png" alt="Sushi Room">
+    <div class="meta">
+      <h1>Order Room</h1>
+      <div id="nowLine" class="now"></div>
+    </div>
+  </div>
+</header>
+
+<main id="view-home" class="view active">
+  <section class="card">
+    <h2>ספקים להזמנה</h2>
+    <div id="todaySuppliers" class="supplier-grid"></div>
+  </section>
+</main>
+
+<main id="view-order" class="view">
+  <section class="card order-head">
+    <div class="order-title">
+      <h2>הזמנה חדשה</h2>
+      <button id="activeSupplierBtn" class="btn ghost"></button>
+    </div>
+    <div class="inline-controls">
+      <div class="branch-toggle" id="branchToggle"></div>
+      <div class="delivery-day">
+        <button id="deliveryBtn" class="chip"><span id="deliveryLabel"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="itemsList"></section>
+
+  <section class="card">
+    <label for="notes">הערות להזמנה</label>
+    <textarea id="notes" rows="3" placeholder="הוספת הערות כלליות למשלוח..."></textarea>
+  </section>
+
+  <div class="actions-bar">
+    <button id="saveBtn" class="btn">שמור הזמנה</button>
+    <button id="sendBtn" class="btn success">שלח הזמנה</button>
+  </div>
+</main>
+
+<main id="view-history" class="view">
+  <section class="card">
+    <h2>היסטוריית הזמנות</h2>
+    <div id="historyList" class="history"></div>
+  </section>
+</main>
+
+<main id="view-settings" class="view">
+  <section class="card">
+    <h2>הגדרות</h2>
+    <div>גרסה: <strong>v7.0</strong></div>
+  </section>
+</main>
+
+<div id="backdrop" class="backdrop" hidden></div>
+
+<div id="menuSheet" class="sheet" hidden>
+  <button data-nav="home" class="sheet-item">בית</button>
+  <button data-nav="order" class="sheet-item">הזמנה חדשה</button>
+  <button data-nav="history" class="sheet-item">היסטוריה</button>
+  <button data-nav="settings" class="sheet-item">הגדרות</button>
+</div>
+
+<div id="supplierPicker" class="sheet wide" hidden>
+  <h3>בחר ספק</h3>
+  <div id="supplierGrid" class="supplier-grid two-col"></div>
+</div>
+
+<div id="deliveryPicker" class="sheet" hidden>
+  <div id="deliveryOpts" class="chips"></div>
+</div>
+
+<div id="sendPicker" class="sheet" hidden>
+  <div class="send-row">
+    <button id="sendWA" class="btn icon"><img src="assets/whatsapp.svg" alt=""> וואטסאפ</button>
+    <button id="sendMail" class="btn icon"><img src="assets/mail.svg" alt=""> מייל</button>
+    <button id="sendCopy" class="btn icon"><img src="assets/copy.svg" alt=""> העתק</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js').catch(function(err) {
+      console.log('SW registration failed', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
